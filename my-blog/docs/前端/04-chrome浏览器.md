@@ -64,7 +64,7 @@ js 代码在浏览器中是如何被执行的呢？
 - webcore：负责 html 解析、布局、渲染等工作
 - JavaScriptcore：解析执行 js 代码
 
-js 代码生成的抽象语法树网站：[astexplorer.net](astexplorer.net)
+js 代码生成的抽象语法树网站：[astexplorer.net](https://astexplorer.net)
 
 ## v8 引擎原理
 
