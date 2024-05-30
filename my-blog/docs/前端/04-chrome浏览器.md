@@ -1,0 +1,811 @@
+# Chrome 浏览器
+
+js 代码在浏览器中是如何被执行的呢？
+
+![image-20220226161947199](C:\Users\86131\Desktop\know_fragments\md-img\image-20220226161947199.png)
+
+1.在浏览器输入一个网站链接，会经过**dns 域名解析**转换成**IP 地址**，ip 地址一般是**服务器地址**;
+
+2.进入服务器地址之后，**服务器**一般会返回**index.html**;
+
+3.**浏览器**从**index.html**解析到的**css 文件和 js 文件**都会从服务器**下载**下来;
+
+## 浏览器内核
+
+浏览器内核会将 html、css、js 解析，渲染成网页
+
+- **Geoko**：早期，现在很少了
+- **Trident**：edge 之前使用，现在 edge 已经转向 Blink 了
+- **Webkit**： 苹果开发，之前谷歌浏览器也在使用
+- **Blink**：Webkit 的一个分支，谷歌开发，目前应用于谷歌浏览器、Edge、Opera
+
+浏览器内核也会**影响兼容性**
+
+实际上**浏览器内核**就是浏览器的**排版引擎**，也叫**浏览器引擎**、**页面渲染引擎**
+
+## 浏览器渲染过程
+
+![image-20220226163857471](C:\Users\86131\Desktop\know_fragments\md-img\image-20220226163857471.png)
+
+在**DOM 变成 DOM 树**这个过程，html 解析的时候**遇到 js 标签**，应该怎么办呢？
+
+会**停止解析 html**，而去**加载和执行 js 代码**;
+
+**那 js 代码由谁来执行呢？**;
+
+**js 引擎**
+
+## js 引擎
+
+**为什么需要 js 引擎呢？**
+
+**js**是一门**高级编程语言**;
+
+**高级编程语言**都是需要转化成**机器指令**来执行的;
+
+**js 代码**无论是交给**浏览器**和**node**执行，最后都是需要被**cpu**执行的;
+
+但是**cpu**只认识自己的**指令集**，也就是**机器指令**;
+
+所以需要**js 引擎**将**js 代码**转换成**cpu 指令**;
+
+**那有哪些常见的 js 引擎呢？**
+
+- spiderMonkey：第一款 js 引擎
+- Chakra
+- JavaScriptCore：webkit 中的 js 引擎
+- v8：谷歌开发的强大 js 引擎，（c++编写）
+- ...
+
+## 浏览器内核和 js 引擎的关系
+
+以 webkit 为例，它由两部分组成
+
+- webcore：负责 html 解析、布局、渲染等工作
+- JavaScriptcore：解析执行 js 代码
+
+js 代码生成的抽象语法树网站：[astexplorer.net](astexplorer.net)
+
+## v8 引擎原理
+
+js 代码-->ast(抽象语法树)-->字节码-->机器指令
+
+其中字节码的存在是为了**跨平台**和**收集热函数**;
+
+什么叫**热函数**？**执行次数比较多**的函数;
+
+将执行次数多的函数**直接**转换成**机器指令**放到字节码里，就不用每次都是**字节码变机器指令**，提升性能;
+
+## 预解析
+
+**并不是所有**就是代码一开始就会被执行，如果对**所有的 js 代码进行解析**会影响网页的**运行效率**
+
+v8 引擎实现了 Lazy Parsing**延迟解析**的方案，它的作用是将**不必要的函数进行预解析**;
+
+在也就是解析暂时需要的内容，而**对函数的全量解析**是**函数被调用时**才会进行;
+
+# 事件循环
+
+## 进程和线程
+
+### 进程
+
+**启动**一个**应用程序**，就会默认**启动一个进程**（也可能多个）
+
+### 线程
+
+每**一个进程**中，**至少一个线程**来**执行**程序中的**代码**，这个线程被称之为**主线程**
+
+#### js 的线程
+
+- js 是**单线程**的，他的**进程容器**是：**浏览器或 node**
+- **同一时刻只能做一件事**
+- 如果**这件事非常耗时**，意味着当前的线程就会被**阻塞**
+- 所以**耗时的操作**，并**不会放在 js 线程**上（放在其它线程）
+- 比如**网络请求、定时器**
+
+## 浏览器的事件循环
+
+有三个角色：
+
+- js 线程
+- 其它线程
+- 事件队列
+
+1. **js 线程**执行代码
+2. 当发现**耗时操作**时
+3. 会将这操作（会有回调的函数）交给**其它线程**处理
+4. 当**其它线程**处理完，会将**回调函数**放到**事件队列**中
+5. **js 线程**会定时地来事件队列**执行那些回调函数**
+
+这三个角色形成一个**闭环**，不停地进行这些操作，称之为**事件循环**
+
+### 事件队列
+
+分 2 种：
+
+- 微任务队列（microtask queue）
+- 宏任务队列（macro queue）
+
+### 微任务
+
+哪些回调放微任务呢？
+
+- queueMicrotask
+- Promise.then()中的回调函数
+
+### 宏任务
+
+哪些回调放宏任务呢？
+
+- **定时器**
+- **ajax**
+- **DOM 监听**
+- **UI Rendering**
+
+### 执行顺序
+
+原则：
+
+**在执行任何宏任务之前，都需要保证微任务队列已经被清空**
+
+## node 事件循环
+
+node 有个核心的库 libuv（c 语言），专注于文件 IO，使得 js 也能进行服务器开发
+
+与浏览器大同小异
+
+### 阶段
+
+一次完整的时间循环分很多阶段：
+
+- 定时器
+- 待定回调
+- idle，prepare
+- 轮询
+- 检测
+- 关闭的回调函数
+
+### 事件队列
+
+node 的事件队列分复杂一点
+
+### 宏任务
+
+- 定时器
+- IO 事件
+- close 事件
+
+### 微任务
+
+- promise 的 then 回调
+- process.nexTick（微任务中优先）
+- queueMicrotask
+
+# 事件监听
+
+## 监听方式
+
+- script 中
+- 通过元素的 on
+- 通过 EventTarget 中的 addEventListener
+
+### **元素的 on**
+
+```html
+<div class="box" onclick="console.log(123)"></div>
+<script src="./test.js"></script>
+```
+
+这种现在基本不在使用~
+
+### **script 中**
+
+```html
+<div class="box"></div>
+<script src="./test.js"></script>
+```
+
+```js
+const divE1 = document.querySelector(".box");
+
+divE1.onclick = function () {
+  console.log(123);
+};
+```
+
+#### 缺点
+
+不能重复，**不能多个函数对其响应**
+
+当有多个相同事件，后面会覆盖掉前面
+
+### addEventListener
+
+可以**多个响应函数**
+
+目前用的比较多就是这种方式
+
+```html
+<div class="box"></div>
+<script src="./test.js"></script>
+```
+
+```js
+const divE1 = document.querySelector(".box");
+
+divE1.onclick = function () {
+  console.log(123);
+};
+```
+
+## 事件流
+
+为什么会产生事件流呢?
+
+当我们在浏览器上**对着一个元素点击**时，你点击的**不仅仅是这元素本身**
+
+还有**可能点击了其它元素**，因为**元素之间是可以层叠**的~
+
+### 事件冒泡
+
+事件（如点击）从**最内层往外**依次传递的顺序，称**事件冒泡**
+
+```html
+<div class="box">
+  <span></span>
+</div>
+<script src="./test.js"></script>
+```
+
+```js
+const divE1 = document.querySelector(".box");
+const spanE1 = document.querySelector("span");
+
+divE1.addEventListener("click", () => {
+  console.log("div被点击");
+});
+
+spanE1.addEventListener("click", () => {
+  console.log("span被点击");
+});
+
+document.body.addEventListener("click", () => {
+  console.log("body被点击");
+});
+// 点击span时，打印
+// span被点击
+// div被点击
+// body被点击
+```
+
+### 事件捕获
+
+与事件冒泡相反，事件从**最外层往内**依次传递，称**事件捕获**
+
+**为什么会产生两种不同处理流呢？**
+
+**浏览器早期开发**时，ie 和 Netscape 公司都发现了这个问题，但是他们采取了**相反的策略**：
+
+- ie：事件冒泡
+- Netscape：事件捕获
+
+#### 监听事件捕获
+
+如何去监听事件捕获呢？
+
+**addEventListener 第 3 个参数，true**，默认是 false，事件冒泡
+
+```html
+<div class="box">
+  <span></span>
+</div>
+<script src="./test.js"></script>
+```
+
+```js
+const divE1 = document.querySelector(".box");
+const spanE1 = document.querySelector("span");
+
+divE1.addEventListener(
+  "click",
+  () => {
+    console.log("div被点击");
+  },
+  true
+);
+
+spanE1.addEventListener(
+  "click",
+  () => {
+    console.log("span被点击");
+  },
+  true
+);
+
+document.body.addEventListener(
+  "click",
+  () => {
+    console.log("body被点击");
+  },
+  true
+);
+// 点击span时，打印
+// body被点击
+// div被点击
+// span被点击
+```
+
+要是**同时有事件捕获和事件冒泡**，事件传递顺序是：先**事件捕获**再**事件冒泡**
+
+## 事件对象 event
+
+当产生一个事件时，和**事件相关的信息**也伴随着产生了，浏览器将**这些信息放在一个对象里**，并且**传给**了对应的**处理函数**
+
+```html
+<div class="box"></div>
+<script src="./test.js"></script>
+```
+
+```js
+const divE1 = document.querySelector(".box");
+
+divE1.addEventListener("click", (event) => {
+  console.log(event);
+}); // PointerEvent {isTrusted: true, pointerId: 1, width: 1, height: 1, pressure: 0, …}
+```
+
+### 常见属性
+
+- 事件类型 type
+- 事件源 target
+- 事件发生位置 offsetX/Y
+
+### 常见方法
+
+| preventDefault  | 阻止默认行为       | 如 a 元素的默认跳转 |
+| --------------- | ------------------ | ------------------- |
+| stopPropagation | 阻止事件进一步传递 |                     |
+
+# BOM-DOM
+
+## BOM
+
+### 浏览器对象模型
+
+Browser Object Model，BOM
+
+BOM，连接**js 和浏览器窗口**的**桥梁**。
+
+### 主要的对象模型
+
+- window
+- location
+- history
+- document
+
+#### window
+
+**全局属性、方法**以及**控制浏览器窗口**相关的属性，方法
+
+##### 两个身份
+
+- 全局对象
+- 浏览器窗口对象
+
+**window 对象**由**Window**这个类**创建**，而**Window**类**继承**自**EventTarget**
+
+所以 window 对象也有一下方法：
+
+- addEventListener
+- removeEventListener
+- dispatchEventListener
+
+查看：MDN 文档~
+
+##### 常见属性
+
+查文档~
+
+##### 常见方法
+
+MDN~
+
+##### 常见事件
+
+| onload              | 资源加载完毕         |                |
+| ------------------- | -------------------- | -------------- |
+| onfocus             | 获取焦点             |                |
+| onblur              | 失去焦点             |                |
+| onhashchange        | 链接 hash 值发生改变 | 前端路由       |
+| addEventListener    |                      |                |
+| removeEventListener |                      |                |
+| dispatchEvent       | 派发                 | 参数传事件类型 |
+
+#### location
+
+浏览器连接到的对象的位置 URL
+
+#### 常见属性、方法
+
+window.location 打印自己看~
+
+##### history
+
+操作浏览器的历史
+
+MDN~
+
+##### document
+
+当前窗口操作文档的对象
+
+## DOM
+
+Document Object Model
+
+### 架构(继承关系)
+
+![image-20220310153939338](C:\Users\86131\Desktop\know_fragments\md-img\image-20220310153939338.png)
+
+**前端渲染**
+
+从服务器请求到的数据生成相应的 html，然后再交给浏览器渲染
+
+### document
+
+#### 常见属性
+
+- head
+- title
+- body
+- children[]
+- location
+
+#### 常见方法
+
+| 创建元素   | createElement             |                                                                                               |
+| ---------- | ------------------------- | --------------------------------------------------------------------------------------------- |
+| 添加子元素 | appendChild               | 注意：document 不能使用该方法添加子元素（不知道要在哪里添加）document.body.appendChild 才可以 |
+| 获取元素   | getElementBy...（少用啦） | Id、TagName                                                                                   |
+|            | querySelector             | 获取第一个                                                                                    |
+|            | querySelectorAll          | 获取全部                                                                                      |
+
+### Element
+
+#### 常见属性
+
+- id
+- tagName
+- children
+- className
+- ...
+
+#### 常见方法
+
+特有
+
+| getAttribute | 获取属性 |     |
+| ------------ | -------- | --- |
+| setAttribute | 设置属性 |     |
+
+# json 和数据存储
+
+## JSON 由来
+
+JavaScript Object Notation（对象符号），提出主要应用 js，目前已**独立于编程语言**
+
+**道格拉斯设计**
+
+**服务器和客户端**传输的**数据格式**
+
+其它格式：
+
+- XML 越来越少使用
+- Protobuf 越来越多使用
+
+### 应用场景
+
+- 网络数据传输 JSON 数据
+- 配置文件
+- 非关系型数据（NoSql）库存储格式
+
+### 基本语法
+
+- **双引号**
+- 不支持**undefined**
+- 不能有**注释**
+- 最后位置不能有**逗号**
+
+### 序列化
+
+某些情况希望将 js**复杂类型**转化成**JSON 格式**的字符串，方便处理,比如**localStorage.setItem()**需要传字符串，直接传对象的话，会直接被解析 Object~
+
+```js
+const obj = {
+  name: "zsf",
+  age: 18,
+  friend: {
+    name: "why",
+  },
+};
+
+const objString = JSON.stringify(obj);
+console.log(objString); // {"name":"zsf","age":18,"friend":{"name":"why"}}
+```
+
+还可以将**JSON 格式**的字符串转回**对象**
+
+```js
+const obj = {
+  name: "zsf",
+  age: 18,
+  friend: {
+    name: "why",
+  },
+};
+
+const objString = JSON.stringify(obj);
+console.log(objString);
+
+const info = JSON.parse(objString);
+console.log(info); // {name: 'zsf', age: 18, friend: {…}}
+```
+
+#### stringify
+
+- 参数 1：对象
+- 参数 2：replacer
+- 参数 3：space
+
+##### 参数 2
+
+参数 2 传入**数组**，**按需转化**
+
+```
+const obj = {
+  name: 'zsf',
+  age: 18,
+  friend: {
+    name: 'why'
+  }
+}
+
+const objString = JSON.stringify(obj, ['name', 'age'])
+console.log(objString)// {"name":"zsf","age":18}
+
+```
+
+参数 2 传入**回调函数**，加工数据再序列化
+
+```js
+const obj = {
+  name: "zsf",
+  age: 18,
+  friend: {
+    name: "why",
+  },
+};
+
+const objString = JSON.stringify(obj, (key, value) => {
+  if (key === "age") {
+    return value + 1;
+  }
+  return value;
+});
+console.log(objString); // age+1了
+```
+
+##### 参数 3
+
+缩进空格，默认是 2，提高可读性，也可以用其他字符当空格
+
+##### 特殊情况
+
+如果 obj 对象中有 toJSON 方法，直接使用对象的
+
+### 解析
+
+#### parse
+
+- 参数 1：JSON 字符串
+- 参数 2：revier
+
+##### 参数 2
+
+也可以**拦截**数据，**加工再解析**，类似
+
+stringfy 的参数 2
+
+### 进行深拷贝
+
+**浅拷贝例子**
+
+例子，**展开运算符**
+
+```js
+const obj = {
+  name: "zsf",
+  age: 18,
+  friend: {
+    name: "why",
+  },
+};
+
+const obj1 = { ...obj };
+obj1.friend.name = "kobe";
+console.log(obj.friend.name); // kobe
+```
+
+只是对 obj 对象里**简单类型的属性**做了**深拷贝**，而**引用类型的属性**做的是**浅拷贝**，拷贝的是**地址**，指向依然是同一个（obj.friend = obj1.friend）,所以**obj.friend.name**才会被影响
+
+利用 JSON 的**序列化和解析**可以进行对象的**深拷贝**
+
+```js
+const obj = {
+  name: "zsf",
+  age: 18,
+  friend: {
+    name: "why",
+  },
+};
+
+const jsonString = JSON.stringify(obj);
+const info = JSON.parse(jsonString);
+obj.friend.name = "kobe";
+console.log(info.friend.name); // 还是why
+```
+
+但是这种方式有个
+
+#### **缺点**
+
+stringify**不会对函数做处理**。。。
+
+对象里要是有函数会**默认移除**~
+
+## 浏览器存储方案
+
+### WebStorage
+
+浏览器提供一种比 cookie 更直观的 key-value 存储方式
+
+有两个：
+
+- locaStorage
+- sessionStorage
+
+#### locaStorage
+
+永久性的存储方法，在**关闭掉网页重新打开**时，存储的**内容依然保留**
+
+#### sessionStorage
+
+本次会话的存储，**关闭掉会话**时，存储的**内容会被清除**
+
+#### 常见属性、方法
+
+| length              | 只读属性,通常搭配 key()做遍历 |
+| ------------------- | ----------------------------- |
+| setItem(key, value) |                               |
+| getItem(key)        |                               |
+| key()               | 搭配 length 属性遍历          |
+| removeItem(key)     |                               |
+| clear()             |                               |
+
+遍历
+
+```js
+const obj = {
+  name: "zsf",
+  age: 18,
+  friend: {
+    name: "why",
+  },
+};
+
+const jsonString = JSON.stringify(obj);
+
+localStorage.setItem(obj, jsonString);
+
+for (let i = 0; i < localStorage.length; i++) {
+  const key = localStorage.key(i);
+  console.log(localStorage.getItem(key));
+}
+```
+
+#### Storage 工具类的封装
+
+##### 关键点
+
+- 哪种 storage
+- setitem(key, value)中 value 的序列化
+- getItem(key)中 value 的解析
+- 一些边缘情况
+
+```js
+class SFCache {
+  constructor(isLocal = true) {
+    // 哪种storage
+    this.storage = isLocal ? localStorage : sessionStorage;
+  }
+
+  setItem(key, value) {
+    // 边缘情况
+    if (value) {
+      this.storage.setItem(key, JSON.JSON(value));
+    }
+  }
+
+  getItem(key) {
+    let value = this.storage.getItem(key);
+    // 边缘情况
+    if (value) {
+      value = JSON.parse(value);
+      return value;
+    }
+  }
+
+  removeItem(key) {
+    this.storage.removeItem(key);
+  }
+
+  clear() {
+    this.storage.clear();
+  }
+
+  key(index) {
+    return this.storage.key(index);
+  }
+
+  length() {
+    return this.storage.length;
+  }
+}
+
+const localCache = new SFCache();
+const sessionCache = new SFCache(false);
+// 导出
+export { localCache, sessionCache };
+```
+
+### IndexDB
+
+如果存**大量数据**，就可以尝试这种存储方案
+
+但是要是存**大量数据**，**浏览器缓存**的东西会非常多，浏览器亚历山大~
+
+**移动端**要是也想存大量数据，用**sqlite**
+
+- 事务型数据库系统
+- 基于 js 面向对象数据库，类似 NoSQL
+
+# 试题
+
+## 浏览器输入 url 到页面加载完毕过程
+
+1.启动浏览器**网络线程**
+
+2.根据**是否有缓存**，浏览器进行自己的**请求规则**，决定是**否发出请求**
+
+3.dns 域名解析（查询）
+
+4.tcp 建立连接
+
+5.接到数据，开始页面渲染，启动**浏览器渲染引擎**（渲染引擎与 js 引擎**互斥**，只能运行一个）
+
+**第 5 步还分以下步骤：**
+
+1.解析 HTML，构建**DOM 树**
+
+2.构建**CSS 树**
+
+3.解析 HTML 过程中如果遇到**script 元素**，要停止渲染，启动**js 引擎**执行 script 中的代码，如果是**src**格式，要启动**网络线程**，加载 js 脚本，加载完毕开始执行 js 脚本
+
+4.当 DOM 树构建完毕，css 树也构建完毕时，浏览器进入**layout 阶段**
+
+5.合成渲染树**render-tree**
+
+6.下一步进入**painting**阶段，页面绘制
+
+7.绘制完毕，结束

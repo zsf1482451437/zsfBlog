@@ -1,0 +1,669 @@
+# Flutter
+
+## Dart 环境搭建
+
+使用 vscode 开发 flutter 项目需要装**Flutter**和**Dart**插件（另外再加一个 code runner 插件，方便运行）；
+
+下载 Dart SDK，**配置环境变量**；
+
+官网下载地址：`https://dart.dev/get-dart/archive`；
+
+去终端查看一下版本验证是否配置环境变量成功：`dart --version`；
+
+### 运行案例
+
+dart 有个入口函数，**main**函数
+
+并且一行代码结尾要用**分号**结束
+
+```dart
+main() {
+  print("hello");
+}
+```
+
+输出要是有乱码重启 vscode 即可
+
+## 声明变量
+
+- 明确声明
+- 类型推导
+- 动态类型
+
+### 明确类型
+
+dart 是一门强类型的语言
+
+```dart
+void main(List<String> args) {
+  String foo = 'test';
+  int num = 1;
+}
+```
+
+### 类型推导
+
+- var
+- const
+- final
+- dynamic
+
+#### var、const、final
+
+const 和 final 声明的变量不可以重新赋值
+
+```dart
+void main(List<String> args) {
+  var foo = 'test';
+  const foo1 = 'test';
+  final foo2 = 'test';
+}
+```
+
+**const 和 final 区别**
+
+const 必须直接赋值常量，final 可以通过**运行时**赋值
+
+```dart
+void main(List<String> args) {
+  const foo1 = test();// 报错
+  final foo2 = test();// 可以
+}
+int test() {
+  return 10;
+}
+```
+
+#### dynamic
+
+**明确类型**和类型推导中**var、const、final**声明的类型都是不可以改变的，而**dynamic**就可以；
+
+开发中尽量少用 dynamic 类型，存在类型潜在危险
+
+```dart
+void main(List<String> args) {
+  dynamic foo = 'test';
+  foo = 123;
+}
+```
+
+## 类型
+
+- 数字类型 int、double
+- 布尔类型 bool
+- 字符串 String
+- 集合类型 List、Set、Map
+
+### bool 类型注意
+
+dart 中没有 **非 0 即真** 的说法
+
+```dart
+void main(List<String> args) {
+  var foo = 'test';
+  // 错误的写法
+  if(foo) {
+    print(foo);
+  }
+  // 这样写
+  if(foo != null) {
+    print(foo);
+  }
+}
+```
+
+### 字符串 String
+
+- 单双引号
+- 三引号，可以换行
+
+```dart
+void main(List<String> args) {
+  var foo = 'test';
+  var foo1 = "test";
+  var foo2 = '''
+  abc
+  cba
+  '''
+}
+```
+
+#### 拼接
+
+一般是**${}**这样，当$直接跟一个变量时是可以省略的；
+
+要是跟**表达式**就不可以省略；
+
+```dart
+void main(List<String> args) {
+  final name = 'zsf';
+  final age = 18;
+  print("name:$name age:$age");
+  print("${name.runtimeType}");
+}
+```
+
+### 集合类型
+
+- List，类似数组
+- Set，元素唯一且无序
+- Map，键值对
+
+```dart
+void main(List<String> args) {
+  List<String> names = ['zsf', 'kebe', 'zsf'];
+  // Set一般应用于Lsit的去重
+  Set<int> nums = {101, 111};
+  List<String> name1 = List.from(Set.from(names));
+  print(name1); // [zsf, kobe]
+
+  Map<String, dynamic> info = {
+    'name': 'zsf',
+    'age': 18,
+  };
+}
+```
+
+### dynamic 和 object 区别
+
+dart 中所有的类都默认继承**Object**；
+
+使用 dynamic 类型可以进行类型转化，而使用 Object 类型则不行；
+
+## 函数
+
+dart 中函数的定义是这样的
+
+```js
+int sum(int num1, int num2) {
+  return num1 + num2;
+}
+```
+
+### 参数
+
+dart 中函数的参数有两种：**必传参数**和**可选参数**
+
+**必传参数**
+
+```dart
+void main(List<String> args) {
+  sum(1, 2);
+}
+
+int sum(int num1, int num2) {
+  return num1 + num2;
+}
+```
+
+#### 可选参数
+
+- 位置可选参数
+- 命名可选参数
+
+##### **隐式可选参数**
+
+```dart
+void main(List<String> args) {
+  printInfo(1);
+  printInfo(1, 2);
+}
+
+void printInfo(int num1, [int? num2, String? str]) {
+  print('$num1 $num2 $str');
+}
+```
+
+##### **命名可选参数**
+
+传可选参数时需要指名参数名字
+
+```dart
+
+void main(List<String> args) {
+  printInfo(1);
+  printInfo(1, num2: 2);
+}
+
+void printInfo(int num1, {int? num2, String? str}) {
+  print('$num1 $num2 $str');
+}
+```
+
+##### 默认值
+
+默认值**只能给可选参数**，不可以给必传参数
+
+```dart
+void main(List<String> args) {
+  printInfo(1);
+  printInfo(1, num2: 2);
+}
+
+void printInfo(int num1, {int? num2, String? str = 'hhh'}) {
+  print('$num1 $num2 $str');
+}
+```
+
+### 匿名函数
+
+只有一行才能使用**箭头函数**
+
+```dart
+void main(List<String> args) {
+  List<String> names = ['zsf', 'hhh', 'kkk'];
+  names.forEach((item) {
+    print(item);
+  });
+
+  names.forEach((item) => print(item));
+}
+```
+
+### 返回值
+
+如果没有返回值，默认返回 null
+
+## 运算符
+
+大部分运算符与其它语言类似，下面只说不同的
+
+### 整除
+
+```dart
+const num = 7;
+print(num ~/ 3); // 2
+```
+
+### ??=赋值
+
+- 如果有值，使用原来的值；
+- 如果值为 null，则赋值；
+
+```dart
+var name = 'zsf';
+name ??= 'hhh';
+print(name); // zsf
+```
+
+### ??
+
+```dart
+var msg = null;
+var res = msg ?? 'hello';
+print(res); // hello
+```
+
+如果**msg**有值则赋值给**res**，没有则使用后面的'**hello**'；
+
+### ..级联
+
+## 类和对象
+
+dart 是面向对象的开发语言；
+
+类一般有两部分：**成员变量**和**方法**；
+
+dart2.5 之后，new 关键字可以省略；
+
+```dart
+void main(List<String> args) {
+  final p = new Person();
+  p.name = 'zsf';
+  p.eat();
+}
+
+class Person {
+  String? name;
+
+  void eat() {
+    print('${name}吃东西');
+  }
+}
+
+```
+
+当 eat 函数内有**同名变量**（比如 name）时，需要使用 this，指明**当前对象**的 name，而不是根据**词法作用域**的 name；
+
+### 构造函数
+
+当类中没有**构造函数**，会默认创建一个**无参**的构造函数；
+
+dart 没有**函数的重载**，也就是没有同名的方法；
+
+```dart
+void main(List<String> args) {
+  final p = new Person('zsf');
+  p.eat();
+}
+
+class Person {
+  String? name;
+
+  Person(String name) {
+    this.name = name;
+  }
+
+  void eat() {
+    print('${name}吃东西');
+  }
+}
+```
+
+#### 语法糖
+
+```dart
+void main(List<String> args) {
+  final p = new Person('zsf');
+  p.eat();
+}
+
+class Person {
+  String? name;
+  int? age;
+
+  Person({this.name, this.age})
+
+  void eat() {
+    print('${name}吃东西');
+  }
+}
+```
+
+#### 命名构造函数
+
+当需要多种构造函数时，可以使用命名构造函数
+
+#### 初始化列表
+
+```dart
+void main(List<String> args) {
+  final p = new Person('zsf');
+  p.eat();
+}
+
+class Person {
+  String? name;
+
+  Person(String name) : name = 'zsf';
+
+  void eat() {
+    print('${name}吃东西');
+  }
+}
+```
+
+#### 常量构造函数
+
+- const 修饰构造函数
+- final 修饰成员变量
+- const 声明实例
+
+```dart
+void main(List<String> args) {
+  const p1 = Person('zsf');
+  const p2 = Person('zsf');
+  print(identical(p1, p2)); // true
+}
+
+class Person {
+  final String? name;
+  const Person(this.name);
+}
+```
+
+#### 工厂构造函数
+
+有一个特点：需要在函数内部明确**返回一个对象**
+
+### setter 和 geter
+
+当需要监听属性的访问时，需要用到
+
+### 继承
+
+继承可以复用代码；
+
+子类使用 super 访问父类；
+
+当不满意父类方法可以重写，并且可以拥有自己的成员变量；
+
+```dart
+class Animal {
+  int age;
+
+  Animal(this.age);
+
+  run() {
+    print('在奔跑ing');
+  }
+}
+
+class Person extends Animal {
+  String name;
+
+  Person(String name, int age) : name=name, super(age);
+
+  @override
+  run() {
+    print('$name在奔跑ing');
+  }
+
+  @override
+  String toString() {
+    return 'name=$name, age=$age';
+  }
+}
+
+```
+
+### 抽象类
+
+- 使用关键字**abstract**修饰；
+- **不能被实例化**；
+- 抽象类中可以定义**抽象方法**；
+- 它的子类**必须重写**它的方法；
+
+普通类是不能定义抽象方法的
+
+**什么是抽象方法？**
+
+只有定义，没有实现
+
+```dart
+void eat();
+```
+
+你可能会有个疑惑：抽象类有什么用？
+
+**实现多态**
+
+```dart
+abstract class Shape {
+  getArea();
+}
+
+class Circle extends Shape {
+  double r;
+
+  Circle(this.r);
+
+  @override
+  getArea() {
+    return r * r * 3.14;
+  }
+}
+
+class Reactangle extends Shape {
+  double w;
+  double h;
+
+  Reactangle(this.w, this.h);
+
+  @override
+  getArea() {
+    return w * h;
+  }
+}
+
+```
+
+### 接口
+
+dart 中，默认所有类都是接口；
+
+可以定义成抽象类，由其它类实现；
+
+因为 dart 不能多继承，只能继承一个，当你想**复用多个类**的不同代码时，可以使用实现**implements**，也就是接口；
+
+```dart
+abstract class Runner {
+  run();
+}
+
+abstract class Flyer {
+  fly();
+}
+
+class SuperMan implements Runner, Flyer {
+  @override
+  run() {
+    print('超人在奔跑');
+  }
+
+  @override
+  fly() {
+    print('超人在飞');
+  }
+}
+
+```
+
+### mixin 混入
+
+也是代码复用的一种方案
+
+- 关键字 mixin 定义类
+- with 关键字混入
+
+```dart
+main(List<String> args) {
+  var superMan = SuperMain();
+  superMan.run();
+  superMan.fly();
+}
+
+mixin Runner {
+  run() {
+    print('在奔跑');
+  }
+}
+
+mixin Flyer {
+  fly() {
+    print('在飞翔');
+  }
+}
+
+// implements的方式要求必须对其中的方法进行重新实现
+// class SuperMan implements Runner, Flyer {}
+
+class SuperMain with Runner, Flyer {
+
+}
+
+```
+
+### 泛型
+
+可以让使用者决定类型，能写出更多通用性的代码
+
+```dart
+main(List<String> args) {
+  Location l2 = Location<int>(10, 20);
+  print(l2.x.runtimeType); // int
+
+  Location l3 = Location<String>('aaa', 'bbb');
+  print(l3.x.runtimeType); // String
+}
+
+class Location<T> {
+  T x;
+  T y;
+
+  Location(this.x, this.y);
+}
+```
+
+## 库
+
+dart 任何一个**文件**都是一个库，即使没有使用关键字**library**声明；
+
+- 标准库
+- 自定义
+- 第三方
+
+**标准库**
+
+dart:io、dart:math、dart:html、dart:core 等等
+
+```dart
+import 'dart:io'
+```
+
+**自定义**
+
+```dart
+import 'lib/student/student.dart';
+```
+
+**第三方**
+
+```dart
+//Pub包管理系统中有很多功能强大、实用的库，可以使用前缀 package:
+import 'package:flutter/material.dart';
+```
+
+### 选择性导入
+
+如果希望`只导入`库中某些内容，或者刻意`隐藏`库里面某些内容，可以使用`show`和`hide`关键字
+
+```dart
+import 'lib/student/student.dart' show Student, Person;
+
+import 'lib/student/student.dart' hide Person;
+```
+
+#### 起别名
+
+当各个库有命名冲突的时候，可以使用`as关键字`来使用命名空间
+
+```dart
+import 'lib/student/student.dart' as Stu;
+
+Stu.Student s = new Stu.Student();
+```
+
+# 项目
+
+## 创建 flutter 项目
+
+- 命令行
+- 工具（比如 Android studio）
+
+**命令行**
+
+```
+flutter create learn_flutter
+```
+
+注意项目名不能由**特殊符号**、**驼峰**
+
+**默认项目分析：**
+
+- 在目录下有一个`lib`文件夹，里面会存放我们编写的 Flutter 代码；
+- 打开发现里面有一个`main.dart`，它是我们 Flutter 启动的`入口文件`，里面有`main函数`；
+
+**运行**
+
+终端执行`flutter run`
