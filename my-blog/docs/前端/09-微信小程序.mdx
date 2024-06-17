@@ -1,0 +1,1757 @@
+## 开发工具 ：
+
+mp.weixin.qq.com
+
+## 小程序项目结构
+
+### 配置 app.json
+
+#### "pages"
+
+(路径) 第一项为默认页面
+
+#### "window"
+
+默认页面的窗表现
+
+#### "debug"
+
+调试模式
+
+#### "tabBar"标签栏
+
+设置底部 tab 的表现
+
+#### "networkTimeout"
+
+设置网络超时时间
+
+### 逻辑 app.js
+
+#### 作用：
+
+##### 调用 App 方法创建应用程序实例对象
+
+##### 定义应用程序的生命周期事件
+
+### 样式 app.wxss
+
+## 页面结构
+
+### index.js
+
+作用：
+
+页面功能的实现
+
+### index.wxml
+
+作用：
+
+页面结构 基于 XML
+
+### index.wxss(可选)
+
+作用：
+
+页面样式
+
+### index.json(可选)
+
+优先级比 app.json 高
+
+只能设置"window"里面的内容
+
+## 逻辑层与界面层的分离结构
+
+### 逻辑层
+
+1. 由 js 完成
+2. 业务数据供给
+3. 界面事件处理
+
+#### 小程序的 js 特点：
+
+##### 1.小程序不是运行在浏览器中，所以没有 BOM 和 DOM 对象
+
+##### 2.小程序的 js 还有额外的成员
+
+- App 方法 用于定义应用程序实例对象
+- Page 方法 用于定义页面对象
+- getApp 方法 用来获取全局应用程序对象
+- getCurrentPages 方法 用来获取当前页面的调用栈（数组，最后一个就是当前页面）
+- wx 对象 用来提供核心 API 的
+
+##### 3.小程序的 Js 是支持 CommonJS 规范的
+
+类似于 node 的模块化
+
+只能用 module.exports 而不能用 exports.xxx 导出
+
+### 页面层
+
+- 页面结构（wxml）
+- 页面样式（wxss）
+- 展示逻辑层数据
+
+#### 数据绑定
+
+可以在哪绑定：
+
+- 元素内部
+- 元素的属性
+
+在 index.wxml 文件中
+
+```js
+<!--index.wxml-->
+<view class="container">
+  <!-- 数据在哪  当前页面对象的data属性中-->
+  <!-- 绑到哪去  哪用放哪-->
+  <text>{{ message }}</text>
+</view>
+```
+
+在 index.js 中
+
+```js
+Page({
+  // 为页面提供数据的
+  // data就是界面和逻辑之间的桥梁
+  data: {
+    message: "hello world",
+  },
+});
+```
+
+mustach 语法在处理布尔类型的时候有妙用
+
+#### 列表渲染
+
+##### 循环 wx:for=""
+
+也可以嵌套
+
+###### 常规写法
+
+```js
+<view>
+      <checkbox></checkbox>
+      <text>JavaScript</text>
+    </view>
+    <view>
+      <checkbox checked="{{ true }}"></checkbox>
+      <text>HTML</text>
+    </view>
+    <view>
+      <checkbox></checkbox>
+      <text>CSS</text>
+	</view>
+<view>
+```
+
+###### 渲染写法：
+
+在 index.js 文件中
+
+```js
+Page({
+  // 为页面提供数据的
+  // data就是界面和逻辑之间的桥梁
+  data: {
+    message: "hello world",
+    todos: [
+      { name: "javaScript", completed: false },
+      { name: "HTML", completed: true },
+      { name: "CSS", completed: false },
+    ],
+  },
+});
+```
+
+在 index.wxml 文件中
+
+```js
+<view wx:for="{{ todos }}">
+      <checkbox checked="{{ item.completed }}"></checkbox>
+      <text>{{ item.name }}</text>
+</view>
+```
+
+###### 如果全局属性有 item 这种关键词 可以使用 wx:for-item="XXX"起别名
+
+下标 index 亦是如此
+
+则
+
+在 index.js 文件中
+
+```js
+Page({
+  // 为页面提供数据的
+  // data就是界面和逻辑之间的桥梁
+  data: {
+    message: "hello world",
+    todos: [
+      { name: "javaScript", completed: false },
+      { name: "HTML", completed: true },
+      { name: "CSS", completed: false },
+    ],
+  },
+});
+```
+
+在 index.wxml 文件中
+
+```js
+<view wx:for="{{ todos }}" wx:for-item:="aa">
+      <checkbox checked="{{ aa.completed }}"></checkbox>
+      <text>{{ aa.name }}</text>
+</view>
+```
+
+##### wx:if=""是用来根据 bool 值决定显示或隐藏
+
+#### 事件处理
+
+**基本事件使用 就是通过给组件添加一个“bind+事件名”的属性**
+
+```js
+<!--index.wxml-->
+<view class="container">
+  <button bindtap="bth">点我</button>
+</view>
+```
+
+```js
+//<!--index.js-->
+Page({
+  bth: function () {
+    console.log("123");
+  },
+});
+```
+
+#### 事件冒泡
+
+```js
+//<!--index.wxml-->
+<view class="container">
+  <view
+    bindtap="outHandle"
+    style="width:200px;height:200px;background-color:red"
+  >
+    <view
+      bindtap="innerHandle"
+      style="width:100px;height:100px;background-color:blue"
+    ></view>
+  </view>
+</view>
+```
+
+```js
+//<!--index.js-->
+Page({
+  innerHandle: function () {
+    console.log("inner");
+  },
+  outHandle: function () {
+    console.log("out");
+  },
+});
+```
+
+**当点击 blue 块时，因为 red 块包着 blue 块，所以也会点到 red 块**
+
+##### 解决
+
+将 blue 块的点击事件 bindtap 换成 catchtap
+
+```js
+//<!--index.wxml-->
+<view class="container">
+  <view
+    bindtap="outHandle"
+    style="width:200px;height:200px;background-color:red"
+  >
+    <view
+      catchtap="innerHandle"
+      style="width:100px;height:100px;background-color:blue"
+    ></view>
+  </view>
+</view>
+```
+
+#### 事件传参
+
+要想去拿传递的参数 可以通过 e.target.dataset
+
+```js
+<!--index.wxml-->
+<view class="container">
+  <button bindtap="tapHandle" data-name="张三"> 点我</button>
+</view>
+```
+
+```js
+// <!--index.js-->
+Page({
+  tapHandle: function (e) {
+    //e.targrt 拿到的就是点击的元素
+    //dataset指的是元素上所有以data-开头的属性集合
+    console.log(e.target.dataset); //{name:"张三"}
+  },
+});
+```
+
+## 单向数据流
+
+由于小程序数据绑定只是单向的（后绑前）
+
+**需要双向时需要使用 setDate({})方法**
+
+用来改变 data 中的数据
+
+可以通知界面做出变化
+
+直接赋值不行
+
+```js
+<!--index.wxml-->
+<view class="container">
+  <input value="{{ message }}" bindinput="inputHandle"/>
+  <text>{{ message }}</text>
+</view>
+```
+
+```js
+// <!--index.js-->
+Page({
+  data: {
+    message: "initial",
+  },
+  inputHandle: function (e) {
+    // this.data.message = e.detail.value
+    // console.log(e.detail.value)
+    this.setData({
+      message: e.detail.value,
+    });
+  },
+});
+```
+
+下面的会随着输入框的变化
+
+## 登陆案例
+
+### 涉及技术
+
+#### 数据绑定
+
+- 取逻辑层数据： `{{ 数据 }}`
+
+- 同步界面层数据到逻辑层 ：
+
+  ​ e.detail.value
+
+  ​ this.setData({})方法
+
+#### 事件
+
+输入变化事件 bindinput
+
+按钮点击事件 bindtap
+
+```js
+<!--index.wxml-->
+<view class="container">
+  <view></view>
+  <view class="inputs">
+    <input placeholder="请输入用户名" value="{{ username }}" bindinput="usernameChangeHandle"/>
+    <input type="password" placeholder="请输入密码" value="{{ password }}" bindinput="passwordChangeHandle"/>
+  </view>
+  <view class="buttons">
+    <button type="primary" bindtap="login">登陆</button>
+    <button type="default">注册</button>
+  </view>
+</view>
+
+```
+
+```js
+// <!--index.js-->
+/*
+1.设计数据的结构
+2.将数据绑定到特定元素上
+3.登录按钮的点击事件（具体的登陆逻辑）
+ */
+Page({
+  data: {
+    username: "admin",
+    password: "123",
+  },
+  usernameChangeHandle: function (e) {
+    this.setData({
+      username: e.detail.value,
+    });
+  },
+  passwordChangeHandle: function (e) {
+    this.setData({
+      password: e.detail.value,
+    });
+  },
+  login: function () {
+    // todo:完成逻辑
+    // 1.先知道用户输入内容
+    console.log(this.data);
+    // 2.根据用户输入的值判断
+    // 3.根据判断结果做出响应
+    console.log("123");
+  },
+});
+```
+
+## 条件渲染
+
+根据是否符合条件显示在屏幕上
+
+### wxml 文件下
+
+```html
+<view>
+  <view bindtap="tap">
+    <text>切换</text>
+  </view>
+  <view wx:if="{{ !show }}">
+    <text> 内容。。 内容。。 内容。。 </text>
+  </view>
+</view>
+```
+
+### js 文件下
+
+```js
+Page({
+  /**
+   * 页面的初始数据
+   */
+  data: {
+    show: true,
+  },
+  tap: function () {
+    this.setData({
+      show: !this.data.show,
+    });
+  },
+});
+```
+
+block 标签 不会对渲染有影响，只是相当于容器
+
+减少 dom 树分支，提升效率
+
+```html
+<!--pages/conditinRendering/conditionRendering.wxml-->
+<view>
+  <view bindtap="tap">
+    <text>切换</text>
+  </view>
+  <block>
+    <view wx:if="{{ !show }}">
+      <text> 内容。。 内容。。 内容。。 </text>
+    </view>
+    <view wx:if="{{ !show }}">
+      <text> 内容。。 内容。。 内容。。 </text>
+    </view>
+  </block>
+</view>
+```
+
+### wx:if 与 hidden 区别
+
+一般来说，wx:if 有更高的切换消耗，而 hidden 有更高的初始渲染消耗，因此频繁切换用 hidden 更好
+
+### 典型布局
+
+固定+自适应（弹性）
+
+1. 父盒子设置 display: flex;
+2. 固定部分设置定宽/高
+3. 自适应部分设置 flex: 1;
+
+## 基础布局案例
+
+### 页头
+
+index 文件夹下的 index.json
+
+```json
+{
+  "navigationBarTitleText": "CMusic",
+  "navigationBarBackgroundColor": "#333",
+  "navigationBarTextStyle": "white"
+```
+
+给根容器设置样式,index.wxss+
+
+```css
+.root {
+  display: flex;
+  height: 100%;
+  background-color: #f0f0f0;
+}
+```
+
+效果，不生效，原因：**外侧还有我们控制不到的 page 根结点，这个不是我们代码写出来的，是小程序内置的**
+
+给 page 设置 100%高度，index.wxss+
+
+```css
+page {
+  height: 100%;
+}
+```
+
+结构划分，给 tabs 容器设置样式，index.wxss+
+
+```css
+.tabs {
+  height: 50px;
+  background-color: pink;
+}
+```
+
+效果，没有生效，原因:主轴默认左往右，需要改变方向，上往下，index.wxss 的.root+
+
+```css
+flex-direction: column;
+```
+
+一般情况不会给父容器设置高，都是由内容撑起
+
+所以.tab 要删掉高度
+
+```css
+.tabs {
+  background-color: pink;
+}
+```
+
+结构，index.wxml+
+
+```html
+<view class="tabs">
+  <view class="item">个性推荐</view>
+  <view class="item">歌单</view>
+  <view class="item">主播电台</view>
+  <view class="item">排行榜</view>
+</view>
+```
+
+需要左往右排，要用 flex
+
+index.wxss+
+
+```css
+.tabs {
+  display: flex;
+  background-color: pink;
+}
+.tabs .item {
+  flex: 1;
+}
+```
+
+优化，index.wxml+
+
+```css
+text-align: center;
+font-size: 12px;
+background-color: #222;
+color: #fff;
+padding: 5px 0;
+```
+
+选中高亮，底有条橙色线
+
+index.wxml+
+
+```HTML
+<view class="item active">个性推荐</view>
+```
+
+index.wxss+
+
+```css
+.tabs .item.active {
+  color: #fff;
+  border-bottom: 2px solid #e9232c;
+}
+```
+
+### 播放器
+
+index.wxml+
+
+```html
+<view class="player">
+  <view class="poster">
+    <image src=""></image>
+  </view>
+  <view class="info">
+    <text>约拉智商</text>
+    <text>安妮</text>
+  </view>
+  <view class="controls">
+    <image src=""></image>
+    <image src=""></image>
+    <image src=""></image>
+  </view>
+</view>
+```
+
+index.wxss+
+
+```css
+.player {
+  display: flex;
+  height: 50px;
+  background-color: pink;
+}
+```
+
+设置样式
+
+index.wxss+
+
+```css
+.poster image {
+  height: 40px;
+  width: 40px;
+}
+.info {
+  flex: 1;
+}
+.controls image {
+  height: 40px;
+  width: 40px;
+}
+```
+
+进一步优化
+
+index.wxml+
+
+```html
+<view class="info">
+  <text class="title">约拉智商</text>
+  <text class="artist">安妮</text>
+</view>
+```
+
+index.wxss+
+
+```css
+.player {
+  display: flex;
+  height: 50px;
+  background-color: #17181a;
+}
+.poster image {
+  height: 40px;
+  width: 40px;
+  margin: 5px;
+}
+.info {
+  flex: 1;
+  color: #888;
+  font-size: 14px;
+  margin: 5px;
+}
+.info .title {
+  display: block;
+  font-size: 16px;
+  color: #ccc;
+}
+.controls image {
+  height: 40px;
+  width: 40px;
+  margin: 5px 2px;
+}
+```
+
+### 内容
+
+index.wxml+
+
+```html
+<view class="content">
+  <!-- 轮播图 -->
+  <view class="slide">
+    <image src="../../images/夏豆被画脸2 4k.jpg"></image>
+  </view>
+  <!-- 三个入口 -->
+  <view class="portals">
+    <view class="item">
+      <image src="../../images/Adobe Fm.png"></image>
+      <text>私人FM</text>
+    </view>
+    <view class="item">
+      <image src="../../images/推荐.png"></image>
+      <text>每日歌曲推荐</text>
+    </view>
+    <view class="item">
+      <image src="../../images/榜单.png"></image>
+      <text>云音乐新歌榜</text>
+    </view>
+  </view>
+  <view class="list"></view>
+</view>
+```
+
+index.wxss+
+
+```css
+.slide image {
+  width: 100%;
+  height: 130px;
+}
+.portals {
+  display: flex;
+}
+.portals .item {
+  flex: 1;
+}
+.portals .item image {
+  width: 60px;
+  height: 60px;
+  display: block;
+  margin: 10px auto;
+}
+.portals .item text {
+  display: block;
+  font-size: 12px;
+  text-align: center;
+}
+```
+
+如何实现换行
+
+index.wxml+
+
+```html
+<!-- 歌单 -->
+<view class="list">
+      <view class="title">推荐歌单</view>
+      <view class="inner">
+        <view class="item">
+          <image src="../../images/夏豆4k.jpg"></image>
+          <text>123</text>
+        </view>
+        <view class="item">
+          <image src="../../images/夏豆4k.jpg"></image>
+          <text>123</text>
+        </view>
+        <view class="item">
+          <image src="../../images/夏豆4k.jpg"></image>
+          <text>123</text>
+        </view>
+        <view class="item">
+          <image src="../../images/夏豆4k.jpg"></image>
+          <text>123</text>
+        </view>
+        <view class="item">
+          <image src="../../images/夏豆4k.jpg"></image>
+          <text>123</text>
+        </view>
+        <view class="item">
+          <image src="../../images/夏豆4k.jpg"></image>
+          <text>123</text>
+        </view>
+        <view class="item">
+          <image src="../../images/夏豆4k.jpg"></image>
+          <text>123</text>
+        </view>
+      </view>
+    </view>
+</view>
+```
+
+index.wxss+
+
+```css
+.list .title {
+  font-size: 14px;
+  margin: 5px 10px;
+}
+.list .inner {
+  display: flex;
+}
+.list .inner .item image {
+  display: block;
+  width: 120px;
+  height: 120px;
+}
+```
+
+换行需要在 flex 盒子里设置 flex-wrap
+
+index.wxss+
+
+```css
+.list .inner {
+  display: flex;
+  flex-wrap: wrap;
+}
+```
+
+如何确保每一行有三个
+
+每一个 item 宽为 1/3
+
+index.wxss+
+
+```css
+.list .inner .item {
+  width: 33.333333%;
+}
+```
+
+设置滚动
+
+常规，index.wxss+,overflow 设置 scroll
+
+```css
+.content {
+  flex: 1;
+  background-color: #111214;
+  color: #ccc;
+  overflow: scroll;
+}
+```
+
+小程序专门的组件
+
+scroll-view
+
+将需要滚动的内容把 view 容器换成 scroll-view，并且设置滚动方向属性 scroll-y，最后还需要在样式那加上 over-flow：hidden;
+
+index.wxml+
+
+```html
+<scroll-view class="content" scroll-y>
+  <!-- 轮播图 -->
+  <view class="slide">
+    <image src="../../images/夏豆被画脸2 4k.jpg"></image>
+  </view>
+  <!-- 三个入口 -->
+  <view class="portals">
+    <view class="item">
+      <image src="../../images/Adobe Fm.png"></image>
+      <text>私人FM</text>
+    </view>
+    <view class="item">
+      <image src="../../images/推荐.png"></image>
+      <text>每日歌曲推荐</text>
+    </view>
+    <view class="item">
+      <image src="../../images/榜单.png"></image>
+      <text>云音乐新歌榜</text>
+    </view>
+  </view>
+  <!-- 歌单 -->
+  <view class="list">
+    <view class="title">推荐歌单</view>
+    <view class="inner">
+      <view class="item">
+        <image src="../../images/夏豆4k.jpg"></image>
+        <text>123</text>
+      </view>
+      <view class="item">
+        <image src="../../images/夏豆4k.jpg"></image>
+        <text>123</text>
+      </view>
+      <view class="item">
+        <image src="../../images/夏豆4k.jpg"></image>
+        <text>123</text>
+      </view>
+      <view class="item">
+        <image src="../../images/夏豆4k.jpg"></image>
+        <text>123</text>
+      </view>
+      <view class="item">
+        <image src="../../images/夏豆4k.jpg"></image>
+        <text>123</text>
+      </view>
+      <view class="item">
+        <image src="../../images/夏豆4k.jpg"></image>
+        <text>123</text>
+      </view>
+    </view>
+  </view>
+</scroll-view>
+```
+
+index.wxss+
+
+```css
+.content {
+  flex: 1;
+  background-color: #111214;
+  color: #ccc;
+  overflow: hidden;
+}
+```
+
+## 页面间跳转
+
+navigatetor
+
+api（navigateTo navigateBack redirectTo）
+
+### 有去有回式
+
+**快速新建一个页面的 4 个文件小技巧**
+
+在 app.json 里的 pages 加
+
+例如从 deme1 页面跳转到 CMusic 页面
+
+在 demo1 的 demo1.wxml+
+
+```html
+<navigator url="../index/index">go to CMusic</navigator>
+```
+
+### 有去无回式
+
+在 navigator 元素加个 redirect="true"属性
+
+应用：只需要访问一次的页面
+
+## 页面间传递参数
+
+页面 demo1 向页面 index 传
+
+传的页面.wxml：跳转连接+?键=值，多个用&连接
+
+```html
+<navigator url="../index/index?name=sf&age=12">go to index</navigator>
+```
+
+接的页面.js：onLoad: funtion (options) {}
+
+```js
+onLoad: function (options) {
+    console.log(options)
+}
+```
+
+## 点击高亮
+
+### 方式一
+
+在 navigator 元素加 hover-class="类名"属性，然后添加样式就可以在点击时呈现期望的样式
+
+### 方式二
+
+给任何元素添加 cursor: pointer 样式就可以点击时高亮
+
+## todos 项目
+
+### 主要技术
+
+- flex 布局
+- 事件
+- 数据单向绑定 setData+`{{}}`
+
+### 页面布局
+
+结构，todo.wxml+
+
+```html
+<view class="container">
+  <view class="add">
+    <image src="../../images/添 加.png"></image>
+    <input type="text" placeholder="请添加任务" />
+  </view>
+  <view class="todos">
+    <view class="item">
+      <icon type="success"></icon>
+      <text>html</text>
+      <icon type="clear"></icon>
+    </view>
+    <view class="item">
+      <icon type="success"></icon>
+      <text>css</text>
+      <icon type="clear"></icon>
+    </view>
+    <view class="item">
+      <icon type="success"></icon>
+      <text>javascript</text>
+      <icon type="clear"></icon>
+    </view>
+  </view>
+  <view class="footer">
+    <text>toggle all</text>
+    <text>0 items left</text>
+    <text>clear completed</text>
+  </view>
+</view>
+```
+
+样式，todo.wxss+
+
+```css
+.container {
+  border-top: 1rpx solid #e0e0e0;
+}
+.add {
+  display: flex;
+  align-items: center;
+  margin: 20rpx;
+  border: 1rpx solid #c1c1c1;
+  border-radius: 5rpx;
+  box-shadow: 0 0 5rpx #e1e1e1;
+  padding: 20rpx;
+}
+.add image {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 20rpx;
+}
+.todos {
+  margin: 20rpx;
+  border: 1rpx solid #c1c1c1;
+  border-radius: 5rpx;
+  box-shadow: 0 0 5rpx #e1e1e1;
+}
+.todos .item {
+  display: flex;
+  padding: 20rpx;
+  border: 1rpx solid #e0e0e0;
+}
+.todos .item:last-child {
+  border: 0;
+}
+.todos .item text {
+  flex: 1;
+  margin-left: 20rpx;
+  align-items: center;
+  font-size: 32rpx;
+}
+.footer {
+  display: flex;
+  font-size: 32rpx;
+  margin: 20rpx;
+  justify-content: space-between;
+}
+```
+
+### 抽象数据模型
+
+todo.js+
+
+```js
+// pages/todo/todo.js
+Page({
+  data: {
+    //文本框数据模型
+    add: "",
+    //任务清单数据模型
+    todos: [
+      { name: "html", completed: false },
+      { name: "css", completed: true },
+      { name: "javascript", completed: false },
+    ],
+  },
+});
+```
+
+### 数据绑定
+
+结构，todo.wxml+
+
+```html
+<view class="container">
+  <view class="add">
+    <image src="../../images/添 加.png"></image>
+    <input type="text" placeholder="请添加任务" value="{{ add }}" />
+  </view>
+  <view class="todos">
+    <view
+      class="item {{item.completed? 'completed' : ''}}"
+      wx:for="{{ todos }}"
+    >
+      <icon type="{{ item.completed? 'success' : 'circle'}}"></icon>
+      <text>{{ item.name }}</text>
+      <icon type="clear"></icon>
+    </view>
+  </view>
+  <view class="footer">
+    <text>toggle all</text>
+    <text>0 items left</text>
+    <text>clear completed</text>
+  </view>
+</view>
+```
+
+特殊样式，todo.wxss+
+
+```css
+.todos .item.completed text {
+  color: #888;
+  text-decoration: line-through;
+}
+```
+
+### 界面数据的交互
+
+给元素添加事件
+
+todo.wxml+
+
+```html
+<view class="add">
+  <image src="../../images/添 加.png" bindtap="addTodo"></image>
+  <input
+    type="text"
+    placeholder="请添加任务"
+    value="{{ add }}"
+    bindinput="inputChange"
+  />
+</view>
+```
+
+给逻辑添加事件处理函数
+
+todo.js+
+
+````js
+inputChange: function (e) {
+    this.setData({
+      add: e.detail.value
+    })
+},
+  // 将输入成功的数据同步到后台
+addTodo: function () {
+    //解决没有输入添加也会成功的问题
+    if(!this.data.input) return
+    //新数组覆盖旧数组
+    var todos = this.data.todos
+    todos.push({
+      name: this.data.add,
+      completed: false
+    })
+    //必须显示通知，不然页面不同步（小程序的单向数据绑定）
+    this.setData({
+      todos: todos,
+      add: ''
+    })
+}
+```
+
+### 任务状态切换
+
+todo.wxml+,绑定事件，设置一个自定义属性-索引，方便出发事件时找到事件源
+
+```html
+<view
+  class="item {{item.completed? 'completed' : ''}}"
+  wx:for="{{ todos }}"
+  bindtap="toggle"
+  data-index="{{ index }}"
+></view>
+```
+
+todo.js+
+
+```js
+ //切换当前点中的任务完成状态
+toggle: function (e) {
+    //e.currentTarget是绑定事件的事件源的对象，该对象有dataset这个属性，存放自定义属性，可以拿到索引
+    var item = this.data.todos[e.currentTarget.dataset.index]
+    item.completed = !item.completed
+    this.setData({
+      todos: this.data.todos
+    })
+}
+```
+
+### 剩余任务提示
+
+todo.wxml+
+
+```html
+<view class="footer">
+  <text>toggle all</text>
+  <text wx:if="{{ leftCount }}"
+    >{{ leftCount }} {{ leftCount > 1 ? 'items' : 'item' }} left</text
+  >
+  <text>clear completed</text>
+</view>
+```
+
+点击事件要加，todo.js+
+
+数据新增 leftCount
+
+```js
+data: {
+    //文本框数据模型
+    add: '123',
+    //任务清单数据模型
+    todos: [
+      { name: 'html', completed: false },
+      { name: 'css', completed: true },
+      { name: 'javascript', completed: false },
+    ],
+    leftCount: 2
+  }
+```
+
+```js
+toggle: function (e) {
+    //e.currentTarget是绑定事件的事件源的对象，该对象有dataset这个属性，存放自定义属性，可以拿到索引
+    // console.log(e.currentTarget)
+    var item = this.data.todos[e.currentTarget.dataset.index]
+    item.completed = !item.completed
+    var leftCount = this.data.leftCount + (item.completed ? -1 : 1)
+    this.setData({
+      todos: this.data.todos,
+      leftCount: leftCount
+    })
+}
+```
+
+### 删除任务
+
+todo.wxml+,给 x 元素添加点击事件和自定义属性
+
+```html
+<view class="todos">
+  <view
+    class="item {{item.completed? 'completed' : ''}}"
+    wx:for="{{ todos }}"
+    bindtap="toggle"
+    data-index="{{ index }}"
+  >
+    <icon type="{{ item.completed? 'success' : 'circle'}}"></icon>
+    <text>{{ item.name }}</text>
+    <icon
+      type="clear"
+      bindtap="removeTodo"
+      data-index="{{ index }}"
+    ></icon> </view
+></view>
+```
+
+todo.js+
+
+```js
+removeTodo: function (e) {
+    var todos = this.data.todos
+    //数组的splice(开始下标,长度)方法可以移除数组部分长度
+   //item就是splice方法中移除掉的元素
+    var item = todos.splice(e.currentTarget.dataset.index , 1)[0]
+    this.setData({
+      todos: todos,
+      leftCount: leftCount
+    })
+}
+```
+
+能移除，但剩余任务提示出错
+
+原因：事件冒泡，点击一个任务时触发了两个事件（状态切换+移除）
+
+解决方法：todo.wxml 里的 x 元素的 bindtap 改成 catchtap
+
+### 切换全部任务完成状态
+
+todo.wxml+
+
+```html
+<view class="footer">
+  <text bindtap="toggleAll">toggle all</text>
+  <text wx:if="{{ leftCount }}"
+    >{{ leftCount }} {{ leftCount > 1 ? 'items' : 'item' }} left</text
+  >
+  <text>clear completed</text>
+</view>
+```
+
+todo.js+
+
+数据新增 allCompleted
+
+```js
+data: {
+    //文本框数据模型
+    add: '123',
+    //任务清单数据模型
+    todos: [
+      { name: 'html', completed: false },
+      { name: 'css', completed: true },
+      { name: 'javascript', completed: false },
+    ],
+    leftCount: 2,
+    allCompleted: false
+}
+```
+
+```js
+toggleAll: function () {
+    //this在小程序里面永远指向当前页面对象，不像之前的this指向事件源
+    this.data.allCompleted = !this.data.allCompleted
+    var todos = this.data.todos
+    var that = this//为了让foreach访问到this
+    todos.forEach( function (item) {
+      item.completed = that.data.allCompleted
+    })
+    var leftCount = this.data.allCompleted ? 0 : this.data.todos.length
+    this.setData({
+      todos: todos,
+      leftCount: leftCount
+    })
+}
+```
+
+### 删除已完成
+
+todo.wxml+
+
+```html
+<view class="footer">
+  <text bindtap="toggleAll">toggle all</text>
+  <text wx:if="{{ leftCount }}"
+    >{{ leftCount }} {{ leftCount > 1 ? 'items' : 'item' }} left</text
+  >
+  <text bindtap="clearCompleted">clear completed</text>
+</view>
+```
+
+todo.js+
+
+```js
+clearCompleted: function () {
+    //一般写法
+    // var todos = []
+    // this.data.todos.forEach ( function (item) {
+    //   if (!item.completed) {
+    //     todos.push(item)
+    //   }
+    // })
+    //过滤器写法
+    var todos = this.data.todos.filter( function (item) {
+      return !item.completed
+    })
+    this.setData({
+      todos: todos
+    })
+}
+```
+
+### 优化
+
+- 点击完成按钮/敲回车也会成功添加
+- 没有任务时出现别的页面
+
+点击完成按钮/敲回车也会成功添加
+
+todo.wxml+,bindconfirm 事件
+
+```html
+<input
+  type="text"
+  placeholder="请添加任务"
+  value="{{ add }}"
+  bindinput="inputChange"
+  bindconfirm="addTodo"
+/>
+```
+
+没有任务时出现别的页面
+
+todo.wxml+，加个 block 标签包裹，且给 block 标签加 `wx:if="{{ todos.length }}"`属性，再加个 veiw 标签，它属性加个 wx:else
+
+```html
+<block wx:if="{{ todos.length }}">
+  <view class="todos">
+    <view
+      class="item {{item.completed? 'completed' : ''}}"
+      wx:for="{{ todos }}"
+      bindtap="toggle"
+      data-index="{{ index }}"
+    >
+      <icon type="{{ item.completed? 'success' : 'circle'}}"></icon>
+      <text>{{ item.name }}</text>
+      <icon type="clear" catchtap="removeTodo" data-index="{{ index }}"></icon>
+    </view>
+  </view>
+  <view class="footer">
+    <text bindtap="toggleAll">toggle all</text>
+    <text wx:if="{{ leftCount }}"
+      >{{ leftCount }} {{ leftCount > 1 ? 'items' : 'item' }} left</text
+    >
+    <text bindtap="clearCompleted">clear completed</text>
+  </view>
+</block>
+<view wx:else>恭喜你完成了所有任务！</view>
+```
+
+## local-life 项目
+
+### 配置应用外观及标签栏
+
+app.json+
+
+```json
+{
+  "pages": [
+    "pages/index/index",
+    "pages/messages/messages",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#3a4861",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "本地生活",
+    "backgroundColor": "#bcc0c9",
+    "backgroundTextStyle": "light",
+    "enablePullDownRefresh": false
+  },
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#444",
+    "backgroundColor": "#fff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "assets/home.png",
+        "selectedIconPath": "assets/home-active.png"
+      },
+      {
+        "pagePath": "pages/messages/messages",
+        "text": "消息",
+        "iconPath": "assets/message.png",
+        "selectedIconPath": "assets/message-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "assets/profile.png",
+        "selectedIconPath": "assets/profile-active.png"
+      }
+    ]
+  }
+}
+```
+
+建三个页面
+
+### 公共样式
+
+app.json 的"tabBar"+
+
+```css
+"color": "#999",
+"selectedColor": "#444",
+"backgroundColor": "#fff",
+"borderStyle": "black"
+```
+
+新建一个 app.wxss 文件+
+
+```css
+page {
+  background-color: #f0f0f0;
+}
+```
+
+### 首页布局
+
+#### 轮播
+
+index.wxml+
+
+```html
+<swiper class="slides">
+  <swiper-item>
+    <image src="../../assets/夏豆4k.jpg"></image>
+  </swiper-item>
+  <swiper-item>
+    <image src="../../assets/夏豆被画脸2 4k.jpg"></image>
+  </swiper-item>
+</swiper>
+```
+
+index.wxss+
+
+```css
+.slides {
+  height: 380rpx;
+}
+.slides image {
+  height: 100%;
+  width: 100%;
+}
+```
+
+#### 九宫格
+
+index.wxml+
+
+```html
+<view class="gird">
+  <view class="item">
+    <image src="../../assets/美食.png"></image>
+    <text>美食</text>
+  </view>
+  <view class="item">
+    <image src="../../assets/洗浴.png"></image>
+    <text>洗浴足疗</text>
+  </view>
+  <view class="item">
+    <image src="../../assets/结婚照.png"></image>
+    <text>结婚</text>
+  </view>
+  <view class="item">
+    <image src="../../assets/KTV.png"></image>
+    <text>KTV</text>
+  </view>
+  <view class="item">
+    <image src="../../assets/找工作.png"></image>
+    <text>找工作</text>
+  </view>
+  <view class="item">
+    <image src="../../assets/名师辅导.png"></image>
+    <text>辅导</text>
+  </view>
+  <view class="item">
+    <image src="../../assets/汽车服务.png"></image>
+    <text>汽车保养</text>
+  </view>
+  <view class="item">
+    <image src="../../assets/租房.png"></image>
+    <text>租房子</text>
+  </view>
+  <view class="item">
+    <image src="../../assets/装修.png"></image>
+    <text>装修</text>
+  </view>
+</view>
+```
+
+index.wxss+
+
+```css
+.gird {
+  display: flex;
+  flex-wrap: wrap;
+  background-color: #fff;
+  color: #888;
+  font-size: 28rpx;
+}
+.gird .item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 250rpx;
+  height: 250rpx;
+  border: 1rpx solid #eee;
+  box-sizing: border-box;
+}
+.gird .item image {
+  display: block;
+  margin-bottom: 20rpx;
+  height: 70rpx;
+  width: 70rpx;
+}
+```
+
+#### 链接
+
+index.wxml+
+
+```html
+<!-- 链接 -->
+<view class="links">
+  <image src="../../assets/link-01.png"></image>
+  <image src="../../assets/link-01.png"></image>
+</view>
+```
+
+### 首页功能实现
+
+#### 发起网络请求
+
+在 index.js 里
+
+```js
+onLoad: function (options) {
+    wx.request({
+      url: 'url',
+      success: function (res) {
+        console.log(res)
+      }
+    })
+  }
+```
+
+小程序没有跨域这一概念，要发送异步请求有三个限制
+
+- 异步请求地址必须出现在管理后台的配置列表中
+- 必须是 https
+- 域名必须有备案
+
+#### 轮播图的请求
+
+index.wxml+
+
+```html
+<!-- 轮播图 -->
+<swiper class="slides">
+  <swiper-item wx:for="{{ slides }}" wx:key="id">
+    <image src="{{ item.image }}" mode="aspectFill"></image>
+  </swiper-item>
+</swiper>
+```
+
+index.js 里的 data+
+
+```js
+slides: [];
+```
+
+index.js 里的 onLoad+
+
+```js
+onLoad: function (options) {
+    //轮播图的请求
+    wx.request({
+      url: 'https://locally.uieee.com/slides',
+      success: res => {
+        this.setData({
+          slides: res.data
+        })
+      }
+    })
+  }
+```
+
+#### 九宫格的请求
+
+index.wxml+
+
+```html
+<!-- 九宫格 -->
+<view class="gird">
+  <view class="item" wx:for="{{ categories }}" wx:key="id">
+    <image src="{{ item.icon }}"></image>
+    <text>{{ item.name }}</text>
+  </view>
+</view>
+```
+
+index.js 里的 data+
+
+```js
+categories: [];
+```
+
+index.js 里的 onLoad+
+
+```js
+//九宫格的请求
+wx.request({
+  url: "https://locally.uieee.com/categories",
+  success: (res) => {
+    this.setData({
+      categories: res.data,
+    });
+  },
+});
+```
+
+#### 请求函数的封装
+
+项目目录下新建 utils 文件夹
+
+在该目录下新建 fetch.js
+
+```js
+module.exports = (url, data) => {
+  return new Promise((resolve, reject) => {
+    wx.request({
+      url: "https://locally.uieee.com/${url}",
+      success: resolve,
+      fail: reject,
+    });
+  });
+};
+```
+
+在 index.js 里导入
+
+```js
+const fetch = require("../../utils/fetch");
+```
+
+在 onLoad 里修改
+
+```js
+//轮播图的请求
+fetch("slides").then((res) => {
+  this.setData({
+    slides: res.data,
+  });
+});
+//九宫格的请求
+fetch("categories").then((res) => {
+  this.setData({
+    categories: res.data,
+  });
+});
+```
+
+### 页面间跳转
+
+inde.wxml+
+
+把原先 view 标签换成 navigator，且加上 url 属性
+
+```html
+<view class="gird">
+  <navigator
+    class="item"
+    url="/pages/list/list"
+    wx:for="{{ categories }}"
+    wx:key="id"
+  >
+    <image src="{{ item.icon }}"></image>
+    <text>{{ item.name }}</text>
+  </navigator>
+</view>
+```
+
+给要导航的页面加上参数，便于区别
+
+```html
+<!-- 九宫格 -->
+<view class="gird">
+  <navigator
+    class="item"
+    url="/pages/list/list?cat={{ item.id }}"
+    wx:for="{{ categories }}"
+    wx:key="id"
+  >
+    <image src="{{ item.icon }}"></image>
+    <text>{{ item.name }}</text>
+  </navigator>
+</view>
+```
+````

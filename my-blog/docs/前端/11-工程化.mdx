@@ -1,0 +1,1357 @@
+# 前端工程化
+
+## babel
+
+### babel
+
+babel 是一个工具链，依赖各种**插件**对**es6+**的语法转化为**低版本**（浏览器可识别）的语法
+
+当然，如果一个个插件都要安装，那就太麻烦了，这时会用到**预设**
+
+**preset**
+
+预设可以将**常用的插件**集成到一起
+
+可以安装 `@babel/preset-env` 使用预设
+
+### babel-loader
+
+webpack 是**模块化打包**工具，并不会帮我们将 es6 的代码转化为 es5，这个转化工作由**babel-loader**（依赖 babel）完成，当然，还需要使用相关的插件~（比如转化**const、let**的插件，转化**箭头函数**的插件等等）。当然，可以使用**预设**
+
+### babel 的配置文件
+
+可以将 babel 的配置信息放到一个独立的文件中，babel 给我们提供了两种配置文件的编写：
+
+1. babel.config.json（或.js、.cjs、.mjs）文件，**推荐**
+2. .babelrc.json（或 babelrc，.js ，.cjs，.mjs）文件
+
+比如 babel.config.js
+
+```js
+module.exports = {
+  presets: ["@babel/preset-env"],
+};
+```
+
+### 底层原理
+
+你可能想问：**babel 如何将（es6、ts、react）转换成 es5 的呢？**
+
+其实，将源代码（**原生语言**）转化成另一种源代码（**目标语言**），这是**编译器**的职责
+
+**babel**就类似于一个编译器
+
+#### 工作流程
+
+babel 也拥有编译器的工作流程：
+
+1. 解析（Parsing）
+2. 转化（Transformation）
+3. 生成（Code Generation）
+
+可以去 https://github.com/jamiebuilds/the-super-tiny-compiler 查看详细过程
+
+原生代码 -> 词法分析 -> 数组 -> 语法分析 -> AST -> **遍历** -> **访问** -> **应用插件** -> **新的 AST** -> 目标代码
+
+**node.js 中通过 babel 体验 es6 模块化**
+
+babel 语法转换插件，可以把高级的、有兼容性的 js 代码转换成低级的、没有兼容性的代码
+
+1. npm install --save-dev @babel/core @babel/cli @babel/preset-env @babel/node
+2. npm install --save @babel/polyfill
+3. 项目根目录创建文件 babel.config.js
+4. babel.config.js 文件内容如下
+
+```js
+const presets = [
+  [
+    "@babel/env",
+    {
+      targets: {
+        edge: "17",
+        firefox: "60",
+        chrome: "67",
+        safari: "11.1",
+      },
+    },
+  ],
+];
+module.exports = { presets };
+```
+
+5.通过 `npx babel-node index.js` 执行代码（高版本 npm 自带 npx）
+
+## webpack
+
+### 当前 web 开发面临的困境
+
+- 文件依赖关系错综复杂
+- 静态资源请求效率低
+- 模块化支持不友好
+- 浏览器对高级 javascript 特性兼容程度较低
+
+### webpack 概述
+
+webpack 是一个流行的**前端项目构建工具**（打包工具），可以解决当前 web 开发中所面临的的困境。
+
+webpack 提供了**友好的模块化支持**，以及**代码压缩混淆**、**处理 js 兼容性问题**、**性能优化**等强大功能，从而让程序员把工作的重心放到具体的功能实现上，提高开发效率和项目的可维护性。
+
+**grunt/gulp 和 webpack 有什么不同？**
+
+grunt/gulp 更加强调的是前端流程的自动化，模块化不是它的核心。
+
+而 webpack 更加强调模块化开发管理，而文件压缩合并，预处理等功能，是他附带的的功能。
+
+### webpack 的基本使用
+
+安装 webpack 首先要安装 node.js,node.js 自带了软件包管理工具 npm
+
+#### 在项目中安装和配置 webpack
+
+1. 运行 `npm install webpack webpack-cli -D` 命令，安装 webpack 相关的包
+2. 在根目录中，创建名为 webpack.config.js 的 webpack 配置文件
+3. 在 webpack 的配置文件中，初始化如下基本配置：
+
+```js
+module.exports = {
+  mode: "development", //mode 用来指定构建模式还有 production
+};
+```
+
+4.在 package.json 配置文件中的 scripts 节点下，新增 dev 脚本如下：
+
+```json
+"scripts": {
+	"serve": "webpack"//scripts节点下的脚本，可以通过npm run 执行
+}
+```
+
+5.在终端中运行 `npm run serve` 命令，启动 webpack 进行项目打包。
+
+development 模式下的 main.js(还未压缩)
+
+开发时使用 development 模式，提高编译速度，
+
+发布时使用 production 模式。
+
+#### 配置打包的出口与入口
+
+webpack 的 4.x 版本中默认约定:
+
+- 打包的入口文件为 src -> index.js
+- 打包的输出文件为 dist -> main.js
+
+如果要修改打包入口与出口，可以在 webpack.config.js 中新增配置信息：
+
+```js
+const path = require("path"); //导入node.js中专门操作路径的模块
+module.exports = {
+  entry: path.join(__dirname, "./src/index.js"), //打包入口文件的路径
+  output: {
+    path: path.join(__dirname, "./dist"), //输出文件的存放路径
+    filename: "bundle.js", //输出文件名称
+  },
+};
+```
+
+### webpack 中的 loader
+
+#### 通过 loader 打包非 js 模块
+
+实际开发中，webpack 默认只能打包处理以.js 后缀名结尾的模块，其它**非.js 后缀名结尾的模块**，webpack 默认处理不了，**需要调用 loader 加载器才可以正常打包**，否则会报错！
+
+loader 加载器可以协助 webpack 打包处理特定的文件模块，比如：
+
+- less-loader 可以打包处理 .less 相关的文件
+- sass-loader 可以打包处理 .sass 相关的文件
+- url-loader 可以打包处理 css 中与 url 路径相关的文件
+
+#### loader 的调用过程
+
+#### webpack 中加载器的基本使用
+
+##### 打包处理 css 文件
+
+css-loader 只负责加载
+
+还需要 style-loader 将样式添加到 DOM 中
+
+style-loader
+
+1. 运行 `npm i style-loader css-loader -D` 命令，安装处理 css 文件的 loader
+
+2. 在 webpack.config.js 的 module -> rules 数组中，添加 loader 规则如下：
+
+3. ```js
+   // 所有第三方文件模块的匹配规则
+   module: {
+     rules: [{ test: /\.css$/, use: ["style-loader", "css-loader"] }];
+   }
+   ```
+
+其中，test 表示匹配的文件类型（正则表达式），use 表示对应要调用的 loader
+
+**注意：**
+
+- use 数组中指定的 loader 顺序是固定的
+- 多个 loader 的调用顺序是：从后往前调用
+
+##### 打包处理 less 文件
+
+1. 运行 `npm i less-loader less -D` 命令，安装处理 less 文件的 loader
+
+2. 在 webpack.config.js 的 module -> rules 数组中，添加 loader 规则如下：
+
+3. ```js
+   // 所有第三方文件模块的匹配规则
+   module: {
+     rules: [
+       { test: /\.less$/, use: ["style-loader", "css-loader", "less-loader"] },
+     ];
+   }
+   ```
+
+##### 打包处理 scss 文件
+
+1. 运行 `npm i sass-loader node-sass -D` 命令，安装处理 sass 文件的 loader
+
+2. 在 webpack.config.js 的 module -> rules 数组中，添加 loader 规则如下：
+
+3. ```js
+   // 所有第三方文件模块的匹配规则
+   module: {
+     rules: [
+       { test: /\.scss$/, use: ["style-loader", "css-loader", "sass-loader"] },
+     ];
+   }
+   ```
+
+##### 配置 postCSS 自动添加 css 的兼容前缀
+
+1. 运行 `npm i postcss-loader autoprefixer -D` 命令
+
+2. 在项目根目录中创建 postcss 的配置文件 postcss.config.js,并初始化如下配置：
+
+3. ```js
+   const autoprefixer = require("autoprefixer"); //导入自动添加前缀的插件
+   module.exports = {
+     plugins: [autoprefixer], //挂载插件
+   };
+   ```
+
+4. 在 webpack.config.js 的 module -> rules 数组中，修改 css 的 loader 规则如下：
+
+5. ```js
+   // 所有第三方文件模块的匹配规则
+   module: {
+     rules: [
+       {
+         test: /\.css$/,
+         use: ["style-loader", "css-loader", "postcss-loader"],
+       },
+     ];
+   }
+   ```
+
+##### 打包样式表中的图片和字体文件
+
+1. 运行 `npm i url-loader file-loader -D` 命令
+
+2. 在 webpack.config.js 的 module -> rules 数组中，添加 loader 规则如下：
+
+3. ```js
+   // 所有第三方文件模块的匹配规则
+   module: {
+     rules: [
+       {
+         test: /\.jpg|png|gif|bmp|ttf|eot|svg|woff|woff2$/,
+         use: [
+           {
+             loader: "url-loader",
+             options: {
+               limit: 90 * 1024,
+             },
+           },
+         ],
+       },
+     ];
+   }
+   ```
+
+当加载的图片，小于 limit 时，会将图片编译成 base64 字符串形式。
+
+当加载的图片，大于 limit 时，需要使用 file-loader 模块进行加载。
+
+然而，还没结束。
+
+去浏览器检查时，并没有显示图片，**打开控制台发现图片路径错了**
+
+解决方法：在 webpack.config.js 里添加一个 output 的配置，使用共用路径
+
+```js
+output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'bundle.js',
+    publicPath: 'dist/'
+}
+```
+
+还有一个问题：**打包之后图片名字变了**
+
+解决方法：在 webpack.config.js 里的 module 里的 file-loader 添加一个 option
+
+```js
+options: {
+  limit: 90 * 1024,
+  name: 'img/[name].[hash:8].[ext]'
+}
+```
+
+##### 打包处理 js 文件中的高级语法
+
+1. 安装 babel 转换器相关的包：`npm install -D babel-loader @babel/core @babel/preset-env`
+
+2. 在 webpack.config.js 的 module -> rules 数组中，添加 loader 规则如下：
+
+3. ```js
+   // exclude为排除项，表示babel-loader不需要处理node_modules中的js文件
+   {
+       test: /\.js$/,
+       exclude: /(node_modules|bower_components)/,
+       use: {
+           loader: 'babel-loader',
+           options: {
+               presets: ['@babel/preset-env']
+           }
+       }
+   }
+   ```
+
+##### 资源模块类型
+
+**webpack5**开始，我们就可以直接使用**资源模块类型**（**asset module type**），来**替代**某些**loader**
+
+- **asset/resource** 发送一个单独的文件并导出**URL**，替代**file-loader**
+- **asset/inline** 导出一个资源的**data URI**，替代**url-loader**
+- **asset/source** 导出资源的源代码。之前替代**raw-loader**
+
+##### 打包处理 vue 文件
+
+安装 `npm install vue-loader vue-template-compiler -d`相关的包
+
+配置
+
+```js
+{
+  test: /\.vue$/,
+  use: ['vue-loader']
+}
+```
+
+###### runtime-compiler 和 runtime-only 区别（掌握）
+
+**runtime-compiler**
+
+**可以解析 template**
+
+template->ast->render->vdom->ui
+
+```js
+import Vue from "vue";
+import App from "./App.vue";
+
+Vue.config.productionTip = false;
+
+new Vue({
+  el: "#app",
+  template: "<App/>",
+  components: {
+    App,
+  },
+});
+```
+
+**runtime-only**(性能更高，代码量更少)
+
+**不解析 template**
+
+render->vdom->ui
+
+```js
+import Vue from "vue";
+import App from "./App.vue";
+
+Vue.config.productionTip = false;
+
+new Vue({
+  el: "#app",
+  render: (h) => h(App),
+});
+```
+
+那么，.vue 文件的 template 是由谁处理的呢？
+
+**vue-template-compiler**，.vue 文件的 template 已经被转换成 render 函数了
+
+###### render 函数的完整写法
+
+h 只是代号
+
+```js
+render: function (createElement) {
+    // 1.普通用法createElement('标签',{标签的属性},['标签内容'])
+    return createElement('h2',{class: 'box'},['hello'])
+    // 2.也可以传入组件对象createElement(App)
+}
+```
+
+###### vue 不同版本的含义
+
+| vue(.runtime).global.(.prod).js  | vue(.runtime).esm-browser.(.prod).js           | vue(.runtime).esm-bundler.js                                | vue.cjs.(.prod).js           |
+| -------------------------------- | ---------------------------------------------- | ----------------------------------------------------------- | ---------------------------- |
+| 通过<script src=""></script>使用 | 用于原生 ES 模块导入使用                       | 用于 webpack、rollup、parcel 等构建工具                     | 服务器端渲染使用             |
+| 会暴露一个全局的 Vue 来使用      | 通过<script src="" type="module"></script>使用 | 构建工具默认的是 vue.runtime.esm-bundler.js                 | 通过 require()在 node 中使用 |
+|                                  |                                                | 如果需要解析 template 模板，需要手动指定 vue.esm-bundler.js |                              |
+
+###### vue 中编写 DOM 元素
+
+vue 开发过程中有三种方式来编写 DOM 元素：
+
+- template，通过源码中一部分代码对其进行**编译**
+- render 函数（h），直接返回一个虚拟节点
+- .vue 文件的 template，通过 vue-loader 对其进行**编译**和处理
+
+###### vue 程序运行过程
+
+###### 解析.vue 文件
+
+安装 `npm install vue-loader@next -D` （vue-loader 默认是处理 vue2）
+
+同时还需要安装 `npm install @vue/compiler-sfc -D` （以前是@vue/vue-template-compiler）
+
+同时还需要一个插件， 引进来。`const { VueLoaderPlugin } = require('vue-loader/dist/index')`,并通过**new** 调用
+
+### webpack 中的 plugin
+
+#### 为打包的文件添加版权信息
+
+插件名：BannerPlugin，webpack 自带
+
+webpack.config.js+
+
+```js
+const webpack = require("webpack");
+
+plugins: [new webpack.BannerPlugin("最终版权归翟思丰所有")];
+```
+
+#### 打包的 HTML 的 plugin
+
+真实发布项目时，发布的是 dist 文件夹的内容，但是 dist 文件夹中如果没有 index.html 文件，那么打包的 js 等文件也就没有意义
+
+所以，我们需要将 index.html 文件打包到 dist 文件夹中，这个时候可以使用 HtmlWebpackPlugin 插件。
+
+安装：`npm i -d html-webpack-plugin` （非 webpack 自带）
+
+**注意，使用这个插件需要删除之前在 output 中添加的 publicPath 属性**，否则插入的 script 中的 src 可能会有问题
+
+```js
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+
+plugins: [
+  new HtmlWebpackPlugin({
+    template: "index.html",
+  }),
+];
+```
+
+**html-webpack-plugin 做了什么？**
+
+- 自动生成一个 index.html 文件（可以指定模板来生成）（这里指定 index.html 模板）
+- 将打包的 js 文件，自动通过 script 标签插入到 body 中
+
+#### js 压缩的 plugin
+
+在项目发布之前，我们需要对 js 等文件进行压缩处理
+
+插件：uglifyjs-webpack-plugin
+
+安装 `npm i -d uglifyjs-webpack-plugin`
+
+配置：
+
+```js
+const uglifyjsWebpackPlugin = require("uglifyjs-webpack-plugin");
+
+plugins: [new uglifyjsWebpackPlugin()];
+```
+
+### devSever
+
+为了完成**自动编译**，webpack 提供了几种方式：
+
+- webpack watch mode
+- webpack-dev-sever（常用）
+- webpack-dev-middleware
+
+#### webpack watch mode
+
+在该模式下，只要一个文件发生更新，那代码将被重新编译
+
+**如何开启 watch 呢？**
+
+方式一，在**导出配置**中，添加**watch：true**
+
+方式二，在**启动 webpack**的命令中，添加 **--watch** 参数
+
+#### webpack-dev-sever
+
+1. `npm install webpack-dev-server -D` 命令，安装支持项目自动打包的工具
+
+2. 修改 package.json -> scripts 中的 dev 命令如下：
+
+3. ```json
+   "scripts": {
+   	"serve": "webpack serve"//script节点下的脚本，可以通过npm run 执行
+   }
+   ```
+
+4. 运行 `npm run serve` 命令，重新进行打包
+
+5. 在浏览器中访问 http://localhost:8080(可变) 地址，查看自动打包效果
+
+注意：
+
+webpack-dev-server 帮我们打包成功的文件，并**没有以文件的形式输出，而是将 bundle 文件保存到内存中**了，（一般的打包都是输出成文件，然后再放到内存中)，这样可以**提高开发效率**。它使用了一个叫**memfs**的库
+
+##### contentBase
+
+```js
+devServer: {
+  contentBase: "./public";
+}
+```
+
+当在**打包后**的资源里找不到相关资源时，会去**contentBase**指定的路径里找
+
+##### hot
+
+**模块热替换**（Hot Module Replacement）HMR
+
+是指应用程序运行过程中，**替换、添加、删除**模块，而**无需刷新**整个页面
+
+**为什么需要模块热替换？**
+
+当一个写了小修改，由于**webpack-dev-server**会自动帮我们**编译并刷新**页面，导致**某些状态**被修改掉了（期望保留这些状态），这不是我们期望的，（期望：替换、添加、删除模块时，**无需刷新**整个页面），而且**只更新修改的模块，性能提高**
+
+webpack-dev-server 已经默认开启
+
+当然也可以自己配置
+
+```js
+target: 'web',
+devSever: {
+    hot: true
+}
+```
+
+到这里还不没做到模块热替换
+
+你还需要在 main.js 里加上这么一个逻辑
+
+```js
+if (module.hot) {
+  module.hot.accpet(需要HMR的模块, () => {});
+}
+```
+
+回调函数可以进行其它处理，可省。
+
+当然，要是很多模块需要 HMR，那这样写起来会非常麻烦。
+
+真实开发中，vue-loader 已经帮我们做了（react 是 react-refresh，React Hot Loader 已弃用）
+
+**HMR 的原理是什么呢？**
+
+webpack-dev-server 会创建两个服务：**提供静态资源的服务**（express）和**Socket 服务**（net.Socket）
+
+Socket 服务是长连接，**什么是长链接？**
+
+在通信两端**有通道**之后，可以**实时任意时刻通信**（比如微信、直播）
+
+**那短连接是什么样的？**
+
+客户端发请求 --> 和服务器建立连接 --> 服务器响应 --> 断开连接
+
+这样就是短连接
+
+所以 HMR 的原理：
+
+- 长链接有一个好处是**建立连接后双方可以通信**（服务器可以直接发送文件到客户端）
+- 当服务器**监听到对应的模块发生变化**时，会生成两个文件: **manifest.json 和 update chunk.js**
+- 通过长连接，服务器可以直接**将这两个文件主动发送给客户端**（浏览器）
+- 浏览器**拿到这两个新文件**后，通过**HMR runtime**机制，**加载这两个文件**，并且**针对修改的模块进行更新**
+
+##### host
+
+设置**主机地址**
+
+默认**localhost**
+
+如果希望其它 ip 的主机也可以访问，可以设置`0.0.0.0`
+
+**localhost 和 0.0.0.0 的区别**
+
+- **localhost**：本质上是一个域名，通常情况会被解析成 127.0.0.1；
+- 而**127.0.0.1**是一个**回环地址**（Loop Back Address） ，回环地址发出去的包，直接**被自己接收**；
+- 正常的数据包是应用层 - 传输层 - 网络层 - 数据链路层；
+- 而**回环地址**主机发出的包，是在**网络层**直接就被获取到了，不走数据链路层了。
+- 这样，**其它 ip 地址**的主机就**收不到**回环地址主机发出的包了
+- 比如，监听**127.0.01**时，在**同一网段下**的主机中，通过 ip 地址是**不能访问**的
+- 而**0.0.0.0**监听**IPV4 上所有地址**，在根据端口找到不同的应用程序，在**同一网段**下的主机中，通过 ip 地址是**可以访问**的（比如两台电脑连同一个 wifi 就可以访问项目啦）
+
+```js
+devSever: {
+  host: "localhost";
+}
+```
+
+##### port
+
+设置端口
+
+```
+devSever: {
+    host: 'localhost'
+}
+```
+
+##### open
+
+设置编译完成自动打开浏览器
+
+```js
+devSever: {
+  open: true;
+}
+```
+
+##### compress
+
+设置静态资源压缩成 gzip 格式（你放心，浏览器可以识别），大概可压缩 60%（不压缩 html）。
+
+```js
+devSever: {
+  compress: true;
+}
+```
+
+##### proxy
+
+使用代理处理跨域问题
+
+```js
+proxy: {
+    '^/api': {
+        target: 'http://localhost:8888',
+        pathRewrite: {
+            '^/api': ''
+        },
+        changeOrigin: true
+    }
+}
+```
+
+**为什么要设置`pathRewrite: { '^api': '' }`？**
+
+因为请求中会出现多出`/api`,代理时将它重写为空
+
+**为什么要设置`changeOrigin: true`？**
+
+有些服务器会**对请求头进行校验**，虽然 proxy 进行了代理处理了跨域，但请求头里的源还是**代理之前**的源，而设置了该属性为 true 时，代理的同时将请求头的源改成**代理之后**的源
+
+##### historyApiFallback
+
+解决 SPA 页面在路由跳转之后，进行页面刷新时，返回 404 的错误
+
+```js
+devSever: {
+  historyApiFallback: true;
+}
+```
+
+### resolve
+
+设置模块如何被解析
+
+- 开发中会有各种模块依赖，这些模块可能是**自己编写的代码**，也可能来自**第三方库**
+- resolve 可以帮助 webpack 从每个**require/import**语句中，找到**需要**引入的合适模块代码
+- webpack 使用**enhanced-resolve**来解析文件路径
+
+webpack 能解析 3 种文件路径：
+
+- 绝对路径，直接获取模块，不需要进一步解析
+- 相对路径，使用**import/require**的资源文件**所在目录**，被认为是**上下文目录**，在 import/require 中给定的相对路径，会**拼接上下文路径**，来生成模块的绝对路径
+- 模块路径，在**resolve.modules**中指定的所有目录检索模块（默认值是['node_modules']）；可以通过设置别名的方式来替换初始模块路径（alias）
+
+#### extensions
+
+解析到文件时自动添加后缀名
+
+默认值是 **['.wasm', '.mjs', '.js', '.json']**
+
+导入模块时，以上这 4 种后缀的文件就可以不写后缀啦,当然，你也可以添加其它后缀
+
+```js
+resolve: {
+  extensions: [".wasm", ".mjs", ".js", ".json"];
+}
+```
+
+#### alias
+
+路径起别名
+
+当有些模块层级比较深时，写起来比较麻烦，此时就可以使用别名
+
+```js
+resolve: {
+    alias: {
+        '@': resolve('src'),
+        'assets': resolve('@/assets')
+        'components': resolve('@/componenets'),
+        'views': resolve('@/view')
+    }
+}
+```
+
+- **import 时用@**
+- **src="url"时用~**
+
+### 开发和生产环境的配置分离
+
+1.在根目录新建一个文件夹 config，并在里面新建三个文件
+
+- common.config.js(公共配置)
+- dev.config.js（开发时配置）
+- prod.config.js（发布时配置）
+
+#### common.config.js
+
+开发和生产都需要的配置
+
+```js
+const path = require("path");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const webpack = require("webpack");
+const VueLoaderPlugin = require("vue-loader/lib/plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const uglifyjsWebpackPlugin = require("uglifyjs-webpack-plugin");
+
+module.exports = {
+  mode: "development",
+  entry: "./src/main.js",
+  output: {
+    path: path.resolve(__dirname, "dist"),
+    filename: "bundle.js",
+    // publicPath: 'dist/'
+  },
+  module: {
+    rules: [
+      { test: /\.css$/, use: ["style-loader", "css-loader"] },
+      {
+        test: /\.jpg|png|gif|bmp|ttf|eot|svg|woff|woff2$/,
+        use: [
+          {
+            loader: "url-loader",
+            options: {
+              limit: 90 * 1024,
+              name: "img/[name].[hash:8].[ext]",
+            },
+          },
+        ],
+      },
+      // exclude为排除项，表示babel-loader不需要处理node_modules中的js文件
+      {
+        test: /\.js$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: "babel-loader",
+          options: {
+            presets: ["@babel/preset-env"],
+          },
+        },
+      },
+      {
+        test: /\.vue$/,
+        use: ["vue-loader"],
+      },
+    ],
+  },
+  plugins: [
+    new CleanWebpackPlugin(),
+    new VueLoaderPlugin(),
+    new webpack.BannerPlugin("最终版权归翟思丰所有"),
+    new HtmlWebpackPlugin({
+      template: "index.html",
+    }),
+    // new uglifyjsWebpackPlugin()
+  ],
+  resolve: {
+    alias: {
+      vue$: "vue/dist/vue.esm.js",
+    },
+  },
+};
+```
+
+#### dev.config.js
+
+```js
+module.exports = {
+  devServer: {
+    contentBase: "./dist",
+    inline: true,
+  },
+};
+```
+
+#### prod.config.js
+
+```js
+const uglifyjsWebpackPlugin = require("uglifyjs-webpack-plugin");
+
+module.exports = {
+  plugins: [new uglifyjsWebpackPlugin()],
+};
+```
+
+#### 合并
+
+**安装 webpack-merge 插件**
+
+既然分开了，那就合并起来
+
+`npm i -d webpack-merge`
+
+在 prod.config.js+
+
+```js
+const uglifyjsWebpackPlugin = require("uglifyjs-webpack-plugin");
+const webpackMerge = require("webpack-merge");
+const commonConfig = require("./common.config");
+
+module.exports = webpackMerge(commonConfig, {
+  plugins: [new uglifyjsWebpackPlugin()],
+});
+```
+
+在 dev.config.js+
+
+```js
+const webpackMerge = require("webpack-merge");
+const commonConfig = require("./common.config");
+
+module.exports = webpackMerge(commonConfig, {
+  devServer: {
+    contentBase: "./dist",
+    inline: true,
+  },
+});
+```
+
+### 打包
+
+#### 分包
+
+自己编写的代码逻辑会被统一打包到**app_hash.js**中，
+
+而第三方依赖会被打包到**chunk_hash.js**中
+
+当自己编写的代码逻辑越来越多，打包之后的**app_hash.js**会越来越大，
+
+app_hash.js 越大，**首屏加载时间**就越长~
+
+webpack 提供了**分包**策略，可以将想要打包的内容放进**别的文件**，而不是 app_hash.js
+
+使用**import()**,它的返回值是个**promise**
+
+通过**import 函数**导入的模块，webpack 打包的时候，会对其进行**分包**操作
+
+#### 企业级的项目打包发布
+
+主要的发布流程：
+
+- 生成打包报告，根据报告分析具体的优化方案
+- tree-shaking
+- 为第三方库启用 cdn 加载
+- 配置组件的按需加载
+- 自定义首页内容
+
+## Source Map
+
+### 生产环境遇到的问题
+
+前端项目在投入生产前，都需要对 JavaScript 源代码进行**混淆压缩**，从而减小文件的体积，提高文件的加载效率。此时就不可避免的产生了另一个问题：
+
+**对压缩混淆之后的代码除错**（debug）是一件及其困难的事情
+
+- 变量被替换成没有任何语义的名称
+- 空行和注释被剔除
+
+### 什么是 Source Map
+
+是一个信息文件，里面存储着**位置信息**。也就是说，Source Map 文件存储着代码压缩混淆后的**前后对应关系**，
+
+有了它，除错的时候，除错工具将**直接显示原始代码，而不是转换后的代码**，能够极大方便后期的调试
+
+### webpack 开发环境下的 Source Map
+
+在**开发环境下**，webpack **默认启用了**Source Map 功能.当程序运行出错时，可以直接在控制台提示**错误行的位置**，并定位到具体的源代码
+
+#### 默认 Source Map 的问题
+
+开发环境下默认生成 source map，记录的是**生成后的代码的位置**。会导致**运行时报错的行数**与**源代码的行数**不一致的问题
+
+#### 解决默认 source map 的问题
+
+**开发环境下**，在 webpack.config.js 中添加如下的配置
+
+```js
+module.exports = {
+  mode: "development",
+  devtool: "eval-source-map",
+};
+```
+
+### source map 的最佳实践
+
+**开发环境：**
+
+- 建议把 devtool 的值设置为**eval-source-map**
+- 好处：可以精准定义到具体的错误行
+
+**生产环境：**
+
+- 建议关闭 source map 或将 devtool 的值设置为 nosources-source-map
+- 好处：防止源码泄露，安全
+
+## vue 脚手架
+
+### Vue-CLI
+
+用于快速生成 vue 项目基础架构，其官网为：https://cli.vuejs.org/zh/
+
+CLI 是 Command-Line interface，命令行界面，俗称脚手架
+
+#### 使用步骤
+
+安装 vue 脚手架
+
+```
+npm install @vue/cli -g
+```
+
+如果要更新
+
+```
+npm update @vue/cli -g
+```
+
+#### 基本用法
+
+使用 Vue CLI 创建 vue 项目
+
+```
+// 1.基于 交互式命令行 的方式，创建 新版vue项目
+vue create my-project
+
+// 2.基于 图形化界面的方式，创建 新版vue项目
+vue ui
+```
+
+项目名称不能包含中文
+
+**注意：**
+
+不推荐这种方式，因为 package.json 主要用来管理包的配置信息；为了方便维护，推荐将 vue 脚手架相关的配置，单独定义到 vue.config.js 配置文件中
+
+```js
+module.exports = {
+    configureWebpack: {
+        ...
+    }
+}
+```
+
+#### vue-cli3 和 2 区别
+
+- vue-cli3 基于 webpack 4 打造，vue-cli2 还是 webpack3
+- vue-cli3 的设计原则是”0 配置“，移除的配置文件根目录下的 build 和 config 等目录
+- vue-cli3 还提供 vue ui 命令，提供了可视化配置，更加人性化
+- 移除了 static 文件夹，新增了 public 文件夹，并且 index.html 移动到 public
+
+#### Vue-CLI 原理
+
+1. 执行 `npm run serve` ；
+
+2. 根据 `serve` 脚本对应的命令（vue-cli-service），去 **node_modules/bin**下；
+
+3. 找到**与该命令同名**的**文件夹**（vue-cli-service），并执行里面的代码；
+
+4. 不过**vue-cli-service.js**文件只是一个**软连接**，真正执行的代码不在这里；
+
+5. 在**node_modules/@vue/cli-service**下的**package.json**,指定了**真正执行代码**的位置；
+
+6. ```json
+   "bin": {
+       "vue-cli-service": "bin/vue-cli-service.js"
+   }
+   ```
+
+7. **node_modules/@vue/cli-service**下有个**bin**目录，bin 目录下有**vue-cli-service.js**；
+
+8. 具体在 vue-cli-service.js 下做了什么，暂时不讨论。。。;
+
+讲了这么多
+
+主要是为了证实**Vue-CLI 是依赖于 webpack 的**
+
+### Vite
+
+发音**/vit/**,不是/vait/~
+
+官方定位：**下一代**前端构建和开发工具
+
+#### 组成
+
+- 一个**开发服务器**（基于**原生 ES 模块**提供了丰富的**内置**的功能，**HMR 速度非常快**）
+- 一套**构建指令**（它使用**rollup**打包代码，并且是**预配置**的，可以输出**生产环境**优化过的静态资源）
+
+#### 基本使用
+
+在此之前，你是否想过这两个问题：**现代浏览器不是基本支持 es 模块化了吗？**，**我在开发阶段不使用构建工具，在打包阶段再使用构建工具可以吗？**
+
+第一个问题，你说的对。在**script**元素的属性里加上 `type="module"` ,浏览器就可以识别模块了（注意引入模块记得加后缀哦）；
+
+第二个问题，有这个想法很好。Vite 的思想就类似于这个想法：**开发阶段不使用构建工具，打包阶段再使用**。
+
+但是，**开发阶段不需要构建工具真的好吗？**
+
+开发阶段我们不止使用 es 模块化，还有可能有**.ts 文件、.vue 文件、.less 文件**等等，这些文件目前浏览器是不支持的，**需要转化成浏览器识别的文件**。
+
+不仅如此，如果不使用构建工具，**包之间的依赖太多**，就会发送**过多的网络请求**，比如**lodash-es**
+
+而 Vite，就可以解决这**两个弊端**。
+
+**安装**
+
+要求 node 版本大于 12
+
+来个局部的 `npm install vite -D`
+
+**使用**
+
+因为局部安装，使用 npx 运行 `npx vite`
+
+然后你会发现很快的它就帮我们搭建了个**本地服务**，而且上面两个弊端也解决啦
+
+#### 特性
+
+- css，less 不需要 loader，也不需要进行相关的配置啦（但是你还是要安装 less 哦）
+
+- 而 postcss 只需安装还有相关插件 `npm install postcss postcss-preset-env -D`,配置**postcss.config.js**即可
+
+  ```js
+  // postcss.config.js
+  module.exports = {
+  	plugins: {
+  		require('postcss-preset-env')
+  	}
+  }
+  ```
+
+- 直接支持 ts，不需要相关配置
+
+- vue，只需要安装相关插件，并配置**vite.config.js**,并且安装 **@vue/compiler-sfc** 插件
+
+  | vue3 单文件组件 | @vitejs/plugin-vue        |
+  | --------------- | ------------------------- |
+  | vue3 JSX        | @vitejs/plugin-vue-jsx    |
+  | vue2            | underfin/vite-plugin-vue2 |
+
+  vite.config.js
+
+  ```js
+  const vue = require('@vitejs/plugin-vue')
+  module.exports = {
+  	plugins: {
+  		vue()
+  	}
+  }
+  ```
+
+#### Vite2 原理
+
+**vite2 是如何做到对 less、ts 等等的支持的呢？**
+
+1. 它会开启一个**本地服务器**，使用了一个叫**Connect**的库（vite1 用 koa），将对 ts、less 文件的请求**拦截并转发**；
+2. 将**ts、less 等文件**交给相关工具，**转化**为**es6**的对应的**js**；
+3. **相关工具**返回那些**js**给**本地服务器**；
+4. **本地服务器**再将那些 js 传给**浏览器**；
+
+同时，执行 vite 的时候，第一次会进行**预打包**，类似于缓存，下次再执行 vite 时就快很多
+
+还有，vite 也依赖**ESBuild**：
+
+- 构建速度快，不需要缓存；
+- 支持**ES6**和**CommonJS**的模块化；
+- 支持 ES6 的**Tree Shaking**；
+- 支持**Go、js**的 API；
+- 支持**ts、jsx**等语法编译；
+- 支持**Source Map**；
+- 支持**代码压缩**；
+- 支持**扩展**其它插件；
+
+**为什么 ESBuild 这么快呢？**
+
+- 使用**Go**语言编写，直接将 ast 转化成**机器代码**，无需经过字节码；
+- 充分利用**CPU 多核**，尽可能让他们饱和运行；
+- 源码从 0 开始编写，并且**不使用第三方库**，一开始就考虑了各种性能问题
+
+快，不是没有理由的~
+
+#### 打包
+
+`npx vite build`
+
+#### 预览
+
+`npx vite preview`
+
+当然这些命令可以自定义成脚本的形式~
+
+#### vite 的脚手架
+
+当然，真实开发我们也不会从 0 开始搭建，而是使用 vite 的脚手架
+
+**安装**
+
+来个全局
+
+`npm install @vitejs/create-app -g`
+
+**使用**
+
+`create-app 项目名`
+
+## Element-UI 的基本使用
+
+一套为开发者、设计师和产品经理准备的基于 vue2.0 的桌面端组件库。
+
+官网地址为：http://element-cn.eleme.io/#/zh-cn
+
+### 基于命令行方式手动安装
+
+1. 安装依赖包 `npm i element-ui -s`
+2. main.js 导入 element-ui 相关资源
+
+```js
+// 导入组件库
+import ElementUI from "element-ui";
+// 导入组件相关样式
+import "element-ui/lib/theme-chalk/index.css";
+// 配置Vue插件
+Vue.use(ElementUI);
+```
+
+### 基于图形化的界面自动安装
+
+1.  运行 `vue ui` 命令，打开图形化界面
+2.  通过 vue 项目管理器，进入具体的项目配置面板
+3.  点击 **插件->添加插件**，进入插件查询面板
+4.  搜索 `vue-cli-plugin-element` 并安装
+5.  配置插件，实现按需导入，从而减少打包后项目的体积
+
+# webpack
+
+## 插件
+
+|     plugin     |                                                                                                                                           作用                                                                                                                                            |
+| :------------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| SentryWebpack  |                  集成 `Sentry` **错误日志**收集服务，`Sentry` 是一个开源的错误日志**收集和分析**服务，可以帮助开发人员更快地定位和修复错误。该插件主要用于在**生产环境**中收集应用程序的错误日志，并将其与特定的 **Git 提交**关联起来，以便更方便地进行错误分析和调试。                   |
+|    Workbox     | `WorkboxPlugin` 是一个用于生成 `Service Worker` 的插件，用于实现**离线缓存**和**资源预缓存**等功能。`Service Worker` 是在**浏览器**和**网络**之间运行的**脚本**，用于提供**离线访问**和**缓存资源**。该插件主要用于优化应用程序的性能和用户体验，特别是在网络不稳定或者没有网络的情况下。 |
+|  Compression   |                                                                              该插件支持多种压缩算法，如 `gzip`、`brotli` 等。压缩构建**输出文件**可以有效地减小文件大小，从而提高应用程序的加载速度和性能。                                                                               |
+| RetryChunkLoad |                                               用于重试加载 `Webpack` **拆分代码块**的插件。该插件主要用于处理**网络不稳定**或者网络超时等情况下的**代码块加载失败**问题。通过配置该插件，可以让应用程序在网络不稳定的情况下更加健壮和稳定。                                               |
+
+## 使用打包进度条插件 demo
+
+创建一个新的项目**目录 webpack**
+
+1.添加**package.json**
+
+```bash
+npm init -y
+```
+
+2.安装 webpack 和 progress-bar-webpack-plugin 插件
+
+```bash
+npm install webpack webpack-cli progress-bar-webpack-plugin --save-dev
+```
+
+3.创建一个 src/index.js 文件
+
+```bash
+console.log("hello");
+```
+
+4.创建一个 webpack.config.js 文件
+
+```js
+const path = require("path");
+const ProgressBarPlugin = require("progress-bar-webpack-plugin");
+
+module.exports = {
+  mode: "development",
+  entry: "./src/index.js",
+  output: {
+    filename: "bundle.js",
+    path: path.resolve(__dirname, "dist"),
+  },
+  plugins: [new ProgressBarPlugin()],
+};
+```
+
+5.使用**插件**打包
+
+```bash
+npx webpack --progress
+```
+
+--progress 参数以**百分比**的形式显示打包进度，如果添加了插件才会以其他形式显示进度
+
+Webpack 将会编译你的项目，并在命令行中显示打包进度条。完成后，你可以在 dist 目录下找到生成的 bundle.js 文件。
+
+## craco 打包添加进度条
+
+以下是一个简单的**示例项目**，演示如何在**React 应用程序**中添加`webpackbar`插件来显示进度条。
+
+1. 创建 React 应用程序
+
+首先，你需要创建一个 React 应用程序。你可以使用`create-react-app`工具来快速创建一个 React 应用程序。在命令行中执行以下命令：
+
+```bash
+npx create-react-app my-app
+cd my-app
+```
+
+2. 安装 webpackbar 插件
+
+在应用程序目录中，使用以下命令安装`webpackbar`插件：
+
+```bash
+npm install webpackbar --save-dev
+```
+
+这个命令会将`webpackbar`插件安装到应用程序中，并将其添加到`package.json`文件的`devDependencies`部分中。
+
+3. 修改 craco 配置文件
+
+在应用程序目录中，创建一个名为`craco.config.js`的新文件，并添加以下代码：
+
+```javascript
+const WebpackBar = require("webpackbar");
+
+module.exports = {
+  plugins: [
+    {
+      plugin: {
+        overrideWebpackConfig: ({
+          webpackConfig,
+          cracoConfig,
+          pluginOptions,
+          context: { env, paths },
+        }) => {
+          webpackConfig.plugins.push(new WebpackBar());
+          return webpackConfig;
+        },
+      },
+    },
+  ],
+};
+```
+
+这个配置文件使用`webpackbar`插件来显示构建进度条。在 Webpack 配置中添加`webpackbar`插件的代码是通过`overrideWebpackConfig`函数实现的。
+
+4. 启动应用程序
+
+在应用程序目录中，使用以下命令启动 React 应用程序：
+
+```bash
+npm start
+```
+
+这个命令会启动开发服务器，并在浏览器中打开 React 应用程序。在构建过程中，`webpackbar`插件会显示构建进度条和其他信息。
+
+5. 构建应用程序
+
+在应用程序目录中，使用以下命令构建 React 应用程序：
+
+```bash
+npm run build
+```
+
+这个命令会生成一个生产环境的构建，并将其输出到`build`目录中。在构建过程中，`webpackbar`插件会显示构建进度条和其他信息。
+
+## 疑难杂症
+
+### postcss 嵌套
+
+> Nested CSS was detected, but CSS nesting has not been configured correctly.
+> Please enable a CSS nesting plugin _before_ Tailwind in your configuration.
+
+# eslint
+
+## 疑难杂症
+
+> :question: 所有文件第一行报：Parsing error: Cannot read file 'd:\workspace\pp\ce\b_d\tsconfig.json'.
+
+工作区设置有问题
+
+参考链接https://bobbyhadz.com/blog/typescript-parsing-error-cannot-read-file
+
+### **.eslintrc.js**
+
+报错信息：
+
+```bash
+Cannot read config file: D:\workspace\pp\ce\b_d\app\client\.eslintrc.js
+Error: Cannot read properties of undefined (reading '@typescript-eslint/no-restricted-imports')
+```
+
+调试发现变量引用错误，修改就好了；
+
+### Unexpected 'debugger' statement no-debugger
+
+在生产环境中不应该包含调试器语句，但是在开发中可以修改配置允许使用；
+
+在你的 ESLint 配置文件（通常是 `.eslintrc.js` 或 `.eslintrc.json`）配置这项：
+
+```json
+{
+  "rules": {
+    "no-debugger": ["error", { "allow": ["debugger"] }]
+  }
+}
+```
+
+# 常见试题
+
+## Loader 和 Plugin 有什么区别
+
+Webpack 将**一切文件视为模块**，但是 webpack 原生是只能解析**js 文件**，如果想将其他文件也打包的话，就会用到`loader`。
+
+Loader 的作用是让 webpack 拥有了**加载和解析非 JavaScript 文件的能力。**
+
+Plugin 可以**扩展 webpack 的功能**，让 webpack 具有更多的灵活性。 在 Webpack 运行的生命周期中会**广播出许多事件**，**Plugin 可以监听这些事件**，在合适的时机通过 Webpack 提供的 API **改变输出结果。**
