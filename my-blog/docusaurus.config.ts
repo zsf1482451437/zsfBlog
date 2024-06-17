@@ -68,7 +68,7 @@ const config: Config = {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: '博客',
+          label: '知识体系',
         },
         {to: 'https://juejin.cn/user/2964734936622894/posts', label: '掘金', position: 'left'},
         {
@@ -85,7 +85,7 @@ const config: Config = {
           title: 'Docs',
           items: [
             {
-              label: '博客',
+              label: '知识体系',
               to: '/docs/intro',
             },
           ],
@@ -111,7 +111,7 @@ const config: Config = {
           title: '更多',
           items: [
             {
-              label: '博客',
+              label: '知识体系',
               to: '/docs/intro',
             },
             {
