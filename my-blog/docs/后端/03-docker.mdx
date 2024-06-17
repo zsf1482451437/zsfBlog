@@ -1,0 +1,822 @@
+# Docker
+
+## 常见命令
+
+### 查看 docker 存储路径
+
+如果你的服务器上有 Docker 运行，请使用以下命令来查找 Docker 的存储路径：
+
+```
+docker info --format '{{.DockerRootDir}}'
+```
+
+无论 Docker 的存储路径是什么，镜像文件通常位于该路径下的子目录中。例如，在默认路径 `/var/lib/docker/` 下，镜像文件将位于 `image/overlay2` 或类似的子目录中。
+
+### 查看镜像存储路径
+
+```bash
+docker inspect --format='{{.GraphDriver.Data.MergedDir}}' <镜像名称或ID>
+```
+
+### 查找容器名称
+
+查找**正在运行**的容器的名称
+
+```bash
+docker ps --format "{{.Names}}"
+```
+
+所有**包括停止状态**的容器的名称，可以加上 `-a` 或 `--all` 选项：
+
+```bash
+docker ps -a --format "{{.Names}}"
+```
+
+### 根据容器名称查看容器信息
+
+```bash
+docker inspect <容器名称或容器ID>
+```
+
+### 停止正在运行的容器
+
+```bash
+docker ps
+```
+
+可查看容器 id
+
+```bash
+docker stop <container_id>
+```
+
+### 删除容器
+
+```bash
+docker rm <container_id>
+```
+
+### 删除镜像
+
+```bash
+docker rmi myimage:tag
+```
+
+### 重启容器
+
+```bash
+docker restart 4e2b35a0d417
+```
+
+### 进去容器修改文件
+
+```bash
+docker exec -it 容器id bash
+```
+
+### 容器日志
+
+```bash
+docker logs <container_id>
+```
+
+### 复制文件到容器
+
+> 复制宿主机某个文件到容器内
+
+```bash
+docker cp 宿主机文件路径 容器id:容器目录
+```
+
+## 容器
+
+> 进入运行容器进行操作
+
+比如 mongodb 容器
+
+```bash
+## 进入容器
+docker exec -it 容器名或id bash
+
+## 启动mongo shell
+mongo 或 mongosh
+
+## 查看数据库
+show dbs
+```
+
+> 退出
+
+```bash
+exit
+```
+
+## dockfile
+
+- 基础镜像
+- 标签
+- 工作目录
+- 环境变量
+- 替换软件镜像源
+- 下载安装软件
+- 删除文件
+- 挂载卷
+- 构建参数
+- 复制文件
+- 端口&启动
+
+```dockerfile
+FROM ubuntu:20.04
+
+LABEL maintainer="tech@appsmith.com"
+
+## Set workdir to /opt/appsmith
+WORKDIR /opt/appsmith
+
+## The env variables are needed for Appsmith server to correctly handle non-roman scripts like Arabic.
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+
+## replace source
+RUN sed -i s@/archive.ubuntu.com/@/mirrors.ustc.edu.cn/@g /etc/apt/sources.list
+RUN sed -i s@/security.ubuntu.com/@/mirrors.ustc.edu.cn/@g /etc/apt/sources.list
+RUN sed -i s@/ports.ubuntu.com/@/mirrors.ustc.edu.cn/@g /etc/apt/sources.list
+
+## Update APT packages - Base Layer
+RUN apt-get update \
+  && apt-get upgrade --yes \
+  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --yes \
+  supervisor curl cron certbot nginx gnupg wget netcat openssh-client \
+  software-properties-common gettext \
+  python3-pip python-setuptools git ca-certificates-java \
+  && wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | apt-key add - \
+  && echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list \
+  && apt-get update && apt-get install --no-install-recommends --yes temurin-17-jdk \
+  && pip install  git+https://github.com/coderanger/supervisor-stdout \
+  && apt-get remove --yes git python3-pip
+
+## Install MongoDB v5.0.14, Redis, NodeJS - Service Layer, PostgreSQL v13
+RUN curl --silent --show-error --location https://www.mongodb.org/static/pgp/server-5.0.asc | apt-key add - \
+  && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-5.0.list \
+  && curl --silent --show-error --location https://deb.nodesource.com/setup_16.x | bash - \
+  && echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list \
+  && curl --silent --show-error --location https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+  && apt update \
+  && apt-get install --no-install-recommends --yes mongodb-org=5.0.14 nodejs redis build-essential postgresql-13 \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+## Clean up cache file - Service layer
+RUN rm -rf \
+  /root/.cache \
+  /root/.npm \
+  /root/.pip \
+  /usr/local/share/doc \
+  /usr/share/doc \
+  /usr/share/man \
+  /var/lib/apt/lists/* \
+  /tmp/*
+
+## Define volumes - Service Layer
+VOLUME [ "/appsmith-stacks" ]
+
+## ------------------------------------------------------------------------
+## Add backend server - Application Layer
+ARG JAR_FILE=./app/server/dist/server-*.jar
+ARG PLUGIN_JARS=./app/server/dist/plugins/*.jar
+ARG APPSMITH_SEGMENT_CE_KEY
+ENV APPSMITH_SEGMENT_CE_KEY=${APPSMITH_SEGMENT_CE_KEY}
+#Create the plugins directory
+RUN mkdir -p ./backend ./editor ./rts ./backend/plugins ./templates ./utils
+
+#Add the jar to the container
+COPY ${JAR_FILE} backend/server.jar
+COPY ${PLUGIN_JARS} backend/plugins/
+
+## Add client UI - Application Layer
+COPY ./app/client/build editor/
+
+## Add RTS - Application Layer
+COPY ./app/rts/package.json ./app/rts/dist rts/
+
+## Nginx, MongoDB and PostgreSQL data config template - Configuration layer
+COPY ./deploy/docker/templates/nginx/* \
+  ./deploy/docker/templates/docker.env.sh \
+  ./deploy/docker/templates/mockdb_postgres.sql \
+  ./deploy/docker/templates/users_postgres.sql \
+  ./deploy/docker/templates/appsmith_starting.html \
+  ./deploy/docker/templates/appsmith_initializing.html \
+  templates/
+
+## Add bootstrapfile
+COPY ./deploy/docker/entrypoint.sh ./deploy/docker/scripts/* ./
+
+## Add util tools
+COPY ./deploy/docker/utils ./utils
+RUN cd ./utils && npm install && npm install -g .
+
+## Add process config to be run by supervisord
+COPY ./deploy/docker/templates/supervisord.conf /etc/supervisor/supervisord.conf
+COPY ./deploy/docker/templates/supervisord/ templates/supervisord/
+
+## Add defined cron job
+COPY ./deploy/docker/templates/cron.d /etc/cron.d/
+RUN chmod 0644 /etc/cron.d/*
+
+RUN chmod +x entrypoint.sh renew-certificate.sh healthcheck.sh
+
+## Disable setuid/setgid bits for the files inside container.
+RUN find / \( -path /proc -prune \) -o \( \( -perm -2000 -o -perm -4000 \) -print -exec chmod -s '{}' + \) || true
+
+## Update path to load appsmith utils tool as default
+ENV PATH /opt/appsmith/utils/node_modules/.bin:$PATH
+LABEL com.centurylinklabs.watchtower.lifecycle.pre-check=/watchtower-hooks/pre-check.sh
+LABEL com.centurylinklabs.watchtower.lifecycle.pre-update=/watchtower-hooks/pre-update.sh
+COPY ./deploy/docker/watchtower-hooks /watchtower-hooks
+RUN chmod +x /watchtower-hooks/pre-check.sh
+RUN chmod +x /watchtower-hooks/pre-update.sh
+
+
+EXPOSE 80
+EXPOSE 443
+ENTRYPOINT [ "/opt/appsmith/entrypoint.sh" ]
+HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/opt/appsmith/healthcheck.sh"
+CMD ["/usr/bin/supervisord", "-n"]
+
+```
+
+### 基础镜像
+
+```bash
+FROM ubuntu:20.04
+```
+
+### 标签
+
+```bash
+LABEL maintainer="tech@appsmith.com"
+```
+
+为镜像添加一个标签，指定维护者的电子邮件地址。
+
+### 工作目录
+
+```bash
+WORKDIR /opt/appsmith
+```
+
+设置工作目录为 `/opt/appsmith`，后续指令都将在这个目录下执行。
+
+### 环境变量
+
+```bash
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+```
+
+设置环境变量以配置容器使用的编码。
+
+### 镜像源
+
+```bash
+RUN sed -i s@/archive.ubuntu.com/@/mirrors.ustc.edu.cn/@g /etc/apt/sources.list && \
+    sed -i s@/security.ubuntu.com/@/mirrors.ustc.edu.cn/@g /etc/apt/sources.list && \
+    sed -i s@/ports.ubuntu.com/@/mirrors.ustc.edu.cn/@g /etc/apt/sources.list
+```
+
+替换 Ubuntu 系统源为中国科技大学的镜像源。
+
+### 安装软件
+
+```bash
+RUN apt-get update \
+    && apt-get upgrade --yes \
+    && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --yes \
+        supervisor curl cron certbot nginx gnupg wget netcat openssh-client \
+        software-properties-common gettext \
+        python3-pip python-setuptools git ca-certificates-java \
+    && wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | apt-key add - \
+    && echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list \
+    && apt-get update && apt-get install --no-install-recommends --yes temurin-17-jdk \
+    && pip install  git+https://github.com/coderanger/supervisor-stdout \
+    && apt-get remove --yes git python3-pip
+```
+
+更新 APT 软件包列表并安装一系列软件包，包括：
+
+supervisor、curl、cron、certbot、nginx、gnupg、wget、netcat、openssh-client、software-properties-common、gettext、python3-pip、python-setuptools、git 、ca-certificates-java
+
+接着，从 Adoptium 官网下载并安装 Temurin JDK 17；
+
+最后，安装 `supervisor-stdout` 插件并删除 Git 和 Python 3 pip
+
+```bash
+RUN curl --silent --show-error --location https://www.mongodb.org/static/pgp/server-5.0.asc | apt-key add - \
+    && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-5.0.list \
+    && curl --silent --show-error --location https://deb.nodesource.com/setup_16.x | bash - \
+    && echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list \
+    && curl --silent --show-error --location https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+    && apt update \
+    && apt-get install --no-install-recommends --yes mongodb-org=5.0.14 nodejs redis build-essential postgresql-13 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+```
+
+下载并添加 MongoDB、Node.js 和 PostgreSQL 的软件源，并通过 APT 安装 MongoDB v5.0.14、Node.js、Redis、build-essential 和 PostgreSQL v13，安装完清除缓存并删除一下 list 文件；
+
+### 删除文件
+
+```bash
+RUN rm -rf \
+    /root/.cache \
+    /root/.npm \
+    /root/.pip \
+    /usr/local/share/doc \
+    /usr/share/doc \
+    /usr/share/man \
+    /var/lib/apt/lists/* \
+    /tmp/*
+```
+
+清理不必要的缓存文件和文档，减小镜像大小；
+
+### 容器挂载卷
+
+```bash
+VOLUME [ "/appsmith-stacks" ]
+```
+
+定义容器挂载的卷 `/appsmith-stacks`。
+
+### 构建参数
+
+```bash
+ARG JAR_FILE=./app/server/dist/server-*.jar
+ARG PLUGIN_JARS=./app/server/dist/plugins/*.jar
+ARG APPSMITH_SEGMENT_CE_KEY
+ENV APPSMITH_SEGMENT_CE_KEY=${APPSMITH_SEGMENT_CE_KEY}
+RUN mkdir -p ./backend
+```
+
+设置构建时需要使用的参数 `JAR_FILE`、`PLUGIN_JARS` 和 `APPSMITH_SEGMENT_CE_KEY`，
+
+其中 `JAR_FILE` 指定了服务器的可执行 JAR 文件路径，`PLUGIN_JARS` 指定了服务器插件 JAR 文件的路径，`APPSMITH_SEGMENT_CE_KEY` 指定了用于启用 Appsmith 的 Segment 跟踪功能的 API 密钥；
+
+接着，创建一个名为 `backend` 的目录，后续的操作将在这个目录中执行；
+
+### 复制文件
+
+```bash
+COPY ${JAR_FILE} ./backend/appsmith.jar
+COPY ${PLUGIN_JARS} ./backend/plugins/
+COPY ./app/server/src/main/resources/application.properties ./backend/
+COPY ./app/server/src/main/resources/log4j2.properties ./backend/
+COPY docker/entrypoint.sh /entrypoint.sh
+COPY docker/healthcheck.sh /healthcheck.sh
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN chmod +x /entrypoint.sh /healthcheck.sh
+```
+
+将服务器的**可执行 JAR** 和**插件 JAR** 复制到 `backend` 目录下；
+
+同时将应用程序的**配置文件**和**日志配置**文件也复制到 `backend` 目录下；
+
+然后，将**入口脚本**、**健康检查脚本**和 Supervisor **配置文件**复制到**容器**中，并给这些脚本添加**可执行权限**；
+
+### 端口&启动
+
+```bash
+EXPOSE 8080
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+```
+
+指定容器将会监听的端口为 `8080`，并将入口点设置为 `/entrypoint.sh` 脚本;
+
+容器启动时会执行 `supervisord` 命令，并传递 Supervisor 配置文件路径作为参数;
+
+## 构建
+
+```bash
+docker build -t harbor.cloud2go.cn/pageplug/pageplug-ce:v1.9.20 .
+```
+
+- `docker build`: 构建 Docker 镜像的命令。
+- `-t pageplug-ce:v1.9.19`: 指定构建的镜像名称及版本号，这里的 `pageplug-ce` 是镜像的名称，`v1.9.19` 是版本号。
+- `.`: 表示 Dockerfile 文件所在的目录，即当前目录。
+
+## 共享
+
+### docker hub
+
+在终端中使用 `docker login` 命令登录到 Docker Hub，输入你的用户名和密码（最后的域名换成 Docker Hub 就行）。
+
+```bash
+echo "Harbor12345" | docker login -u admin --password-stdin harbor.cloud2go.cn
+```
+
+- `docker login`: 登录 Docker Registry 的命令。
+- `-u admin`: 指定登录用户名，这里是 `admin`。
+- `-p Harbor12345`: 指定登录密码，这里是 `Harbor12345`。
+- `harbor.cloud2go.cn`: 指定 Docker Registry 的地址。
+
+使用 `docker tag` 命令给本地的镜像打上标签，格式为 `<Docker Registry 的地址>/<repository>:<tag>`（如果构建镜像时就起好名就不用 tag 啦）
+
+**格式**
+
+```
+docker tag 已有镜像 新镜像
+```
+
+```bash
+docker tag pageplug-ce:v1.9.19 pageplug-ce:v1.9.19
+```
+
+如果 Docker Hub 用户名是 zhaisifeng ,你要上传的镜像仓库名是 pageplug-ce，标签是 v1.9.19，则上传镜像的命令如下：
+
+```bash
+docker push pageplug-ce:v1.9.19
+```
+
+#### 拉取
+
+上传完成后，其他人就可以通过以下命令拉取你的镜像：
+
+```bash
+docker pull pageplug-ce:v1.9.19
+```
+
+### tar
+
+也可以将镜像搞成 tar 包：
+
+```bash
+docker save -o pageplug-ce-v1.9.19.tar pageplug-ce:v1.9.19
+```
+
+然后别人想使用：
+
+```bash
+docker load -i pageplug-ce-v1.9.19.tar
+```
+
+## 使用镜像
+
+然后使用这个镜像来创建新的容器实例：
+
+```bash
+docker run -d zhaisifeng/pageplug-ce:v1.9.19
+```
+
+## 部署
+
+拉取完镜像之后，
+
+在**本地**或者**远程服务器**上
+
+```
+docker run -p 7777:80 --name pp-docus -d pageplug/docus:20230804201859
+```
+
+- `docker run`: 运行一个容器。
+- `-p 7777:80`: 进行端口映射，将容器内部的端口 80 映射到主机上的端口 7777。这样，当你访问主机的 7777 端口时，流量将被转发到容器的端口 80。
+- `--name pp-docus`: 为容器指定一个名称，本例中为 "pp-docus"。
+- `-d`: 以后台（守护进程）模式运行容器。
+- `pageplug/docus:20230804201859`: 要运行的镜像的名称和标签。在本例中，镜像名称为 "pageplug/docus"，标签为 "20230804201859"。
+
+```
+docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:22.0.1 start-dev
+```
+
+当在本地找不到该镜像，他会去 quay.io/keycloak/keycloak 拉取并 run
+
+## 小小疑惑
+
+### docker push 速度？
+
+复现：一个 600M 出的镜像，从主机 a（私有网段）push 到主机 b（公有网段）将近
+
+## docker-compose
+
+> 镜像常规升级版本步骤
+
+```bash
+## 1.关停旧版本服务
+docker-compose down
+
+## 2.修改yml中镜像的版本
+
+## 3.拉取新镜像、创建容器、运行
+docker-compose up -d
+```
+
+`docker-compose up -d` 是使用 Docker Compose 启动容器的命令，其中的 `-d` 参数表示在后台运行（detached mode）。这个命令通常用于启动在 `docker-compose.yml` 文件中定义的服务；
+
+`docker-compose down` 停止容器并删除 up 创建的容器、网络、卷和镜像。
+
+默认情况下，删除的内容只有:
+
+- Compose 文件中定义的服务的容器
+- 在 Compose 文件的`networks`部分中定义的网络
+- 默认网络(如果使用了默认网络)
+
+定义为`external`的网络和卷永远不会被删除。
+
+## 搭建基础镜像
+
+- 原本 Dockerfile
+- 基础镜像 Dockerfile
+- 使用基础镜像的 Dockerfile
+
+这样，不用每次构建镜像时都进行基础镜像的下载（相对耗时）
+
+**原本 Dockefile**
+
+```bash
+FROM ubuntu:20.04
+
+LABEL maintainer="tech@appsmith.com"
+
+## Set workdir to /opt/appsmith
+WORKDIR /opt/appsmith
+
+## The env variables are needed for Appsmith server to correctly handle non-roman scripts like Arabic.
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+
+## replace source
+RUN sed -i s@/archive.ubuntu.com/@/mirrors.ustc.edu.cn/@g /etc/apt/sources.list
+RUN sed -i s@/security.ubuntu.com/@/mirrors.ustc.edu.cn/@g /etc/apt/sources.list
+RUN sed -i s@/ports.ubuntu.com/@/mirrors.ustc.edu.cn/@g /etc/apt/sources.list
+
+## Update APT packages - Base Layer
+RUN apt-get update \
+  && apt-get upgrade --yes \
+  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --yes \
+    supervisor curl cron nfs-common certbot nginx gnupg wget netcat openssh-client \
+    software-properties-common gettext \
+    python3-pip python3-requests python-setuptools git ca-certificates-java \
+  && wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | apt-key add - \
+  && echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list \
+  && apt-get update && apt-get install --no-install-recommends --yes temurin-17-jdk \
+  && pip install git+https://github.com/coderanger/supervisor-stdout \
+  && apt-get remove --yes git python3-pip
+
+## Install MongoDB v5.0.14, Redis, NodeJS - Service Layer, PostgreSQL v13
+RUN curl --silent --show-error --location https://www.mongodb.org/static/pgp/server-5.0.asc | apt-key add - \
+  && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-5.0.list \
+  && curl --silent --show-error --location https://deb.nodesource.com/setup_18.x | bash - \
+  && echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list \
+  && curl --silent --show-error --location https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+  && apt update \
+  && apt-get install --no-install-recommends --yes mongodb-org nodejs redis build-essential postgresql-13 \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+## Clean up cache file - Service layer
+RUN rm -rf \
+  /root/.cache \
+  /root/.npm \
+  /root/.pip \
+  /usr/local/share/doc \
+  /usr/share/doc \
+  /usr/share/man \
+  /var/lib/apt/lists/* \
+  /tmp/*
+
+## Define volumes - Service Layer
+VOLUME [ "/appsmith-stacks" ]
+
+## ------------------------------------------------------------------------
+## Add backend server - Application Layer
+ARG JAR_FILE=./app/server/dist/server-*.jar
+ARG PLUGIN_JARS=./app/server/dist/plugins/*.jar
+
+ARG APPSMITH_CLOUD_SERVICES_BASE_URL
+ENV APPSMITH_CLOUD_SERVICES_BASE_URL=${APPSMITH_CLOUD_SERVICES_BASE_URL}
+
+ARG APPSMITH_SEGMENT_CE_KEY
+ENV APPSMITH_SEGMENT_CE_KEY=${APPSMITH_SEGMENT_CE_KEY}
+#Create the plugins directory
+RUN mkdir -p ./backend ./editor ./rts ./backend/plugins ./templates ./utils
+
+#Add the jar to the container
+COPY ${JAR_FILE} backend/server.jar
+COPY ${PLUGIN_JARS} backend/plugins/
+
+## Add client UI - Application Layer
+COPY ./app/client/build editor/
+
+## Add RTS - Application Layer
+COPY ./app/client/packages/rts/package.json ./app/client/packages/rts/dist rts/
+
+## Nginx, MongoDB and PostgreSQL data config template - Configuration layer
+COPY ./deploy/docker/templates/nginx/* \
+  ./deploy/docker/templates/docker.env.sh \
+  ./deploy/docker/templates/mockdb_postgres.sql \
+  ./deploy/docker/templates/users_postgres.sql \
+  ./deploy/docker/templates/appsmith_starting.html \
+  ./deploy/docker/templates/appsmith_initializing.html \
+  templates/
+
+## Add bootstrapfile
+COPY ./deploy/docker/entrypoint.sh ./deploy/docker/scripts/* info.*json ./
+
+## Add util tools
+COPY ./deploy/docker/utils ./utils
+RUN cd ./utils && npm install --only=prod && npm install --only=prod -g .
+
+## Add process config to be run by supervisord
+COPY ./deploy/docker/templates/supervisord.conf /etc/supervisor/supervisord.conf
+COPY ./deploy/docker/templates/supervisord/ templates/supervisord/
+
+## Add defined cron job
+COPY ./deploy/docker/templates/cron.d /etc/cron.d/
+RUN chmod 0644 /etc/cron.d/*
+
+RUN chmod +x entrypoint.sh renew-certificate.sh healthcheck.sh
+
+## Disable setuid/setgid bits for the files inside container.
+RUN find / \( -path /proc -prune \) -o \( \( -perm -2000 -o -perm -4000 \) -print -exec chmod -s '{}' + \) || true
+
+## Update path to load appsmith utils tool as default
+ENV PATH /opt/appsmith/utils/node_modules/.bin:$PATH
+LABEL com.centurylinklabs.watchtower.lifecycle.pre-check=/watchtower-hooks/pre-check.sh
+LABEL com.centurylinklabs.watchtower.lifecycle.pre-update=/watchtower-hooks/pre-update.sh
+COPY ./deploy/docker/watchtower-hooks /watchtower-hooks
+RUN chmod +x /watchtower-hooks/pre-check.sh
+RUN chmod +x /watchtower-hooks/pre-update.sh
+
+
+EXPOSE 80
+EXPOSE 443
+ENTRYPOINT [ "/opt/appsmith/entrypoint.sh" ]
+HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/opt/appsmith/healthcheck.sh"
+CMD ["/usr/bin/supervisord", "-n"]
+
+```
+
+**基础镜像 Dockerfile**
+
+```bash
+FROM --platform=linux/amd64 ubuntu:20.04
+
+LABEL maintainer="tech@appsmith.com"
+
+## Set workdir to /opt/appsmith
+WORKDIR /opt/appsmith
+
+## The env variables are needed for Appsmith server to correctly handle non-roman scripts like Arabic.
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+
+## Update APT packages - Base Layer
+RUN apt-get update \
+  && apt-get upgrade --yes \
+  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --yes \
+    supervisor curl cron nfs-common certbot nginx gnupg wget netcat openssh-client \
+    software-properties-common gettext \
+    python3-pip python3-requests python-setuptools git ca-certificates-java \
+  && wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | apt-key add - \
+  && echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list \
+  && apt-get update && apt-get install --no-install-recommends --yes temurin-17-jdk \
+  && pip install git+https://github.com/coderanger/supervisor-stdout \
+  && apt-get remove --yes git python3-pip
+
+## Install MongoDB v5.0.14, Redis, NodeJS - Service Layer, PostgreSQL v13
+RUN curl --silent --show-error --location https://www.mongodb.org/static/pgp/server-5.0.asc | apt-key add - \
+  && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-5.0.list \
+  && curl --silent --show-error --location https://deb.nodesource.com/setup_18.x | bash - \
+  && echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list \
+  && curl --silent --show-error --location https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+  && apt update \
+  && apt-get install --no-install-recommends --yes mongodb-org nodejs redis build-essential postgresql-13 \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+## Clean up cache file - Service layer
+RUN rm -rf \
+  /root/.cache \
+  /root/.npm \
+  /root/.pip \
+  /usr/local/share/doc \
+  /usr/share/doc \
+  /usr/share/man \
+  /var/lib/apt/lists/* \
+  /tmp/*
+```
+
+**使用基础镜像的 Dockerfile**
+
+```bash
+FROM harbor.cloud2go.cn/pageplug/ubuntu-20.04:base
+
+## ------------------------------------------------------------------------
+## Add backend server - Application Layer
+ARG JAR_FILE=./app/server/dist/server-*.jar
+ARG PLUGIN_JARS=./app/server/dist/plugins/*.jar
+
+ARG APPSMITH_CLOUD_SERVICES_BASE_URL
+ENV APPSMITH_CLOUD_SERVICES_BASE_URL=${APPSMITH_CLOUD_SERVICES_BASE_URL}
+
+ARG APPSMITH_SEGMENT_CE_KEY
+ENV APPSMITH_SEGMENT_CE_KEY=${APPSMITH_SEGMENT_CE_KEY}
+#Create the plugins directory
+RUN mkdir -p ./backend ./editor ./rts ./backend/plugins ./templates ./utils
+
+#Add the jar to the container
+COPY ${JAR_FILE} backend/server.jar
+COPY ${PLUGIN_JARS} backend/plugins/
+
+## Add client UI - Application Layer
+COPY ./app/client/build editor/
+
+## Add RTS - Application Layer
+COPY ./app/client/packages/rts/package.json ./app/client/packages/rts/dist rts/
+
+## Nginx, MongoDB and PostgreSQL data config template - Configuration layer
+COPY ./deploy/docker/templates/nginx/* \
+  ./deploy/docker/templates/docker.env.sh \
+  ./deploy/docker/templates/mockdb_postgres.sql \
+  ./deploy/docker/templates/users_postgres.sql \
+  ./deploy/docker/templates/appsmith_starting.html \
+  ./deploy/docker/templates/appsmith_initializing.html \
+  templates/
+
+## Add bootstrapfile
+COPY ./deploy/docker/entrypoint.sh ./deploy/docker/scripts/* info.*json ./
+
+## Add util tools
+COPY ./deploy/docker/utils ./utils
+RUN cd ./utils && npm install --only=prod && npm install --only=prod -g .
+
+## Add process config to be run by supervisord
+COPY ./deploy/docker/templates/supervisord.conf /etc/supervisor/supervisord.conf
+COPY ./deploy/docker/templates/supervisord/ templates/supervisord/
+
+## Add defined cron job
+COPY ./deploy/docker/templates/cron.d /etc/cron.d/
+RUN chmod 0644 /etc/cron.d/*
+
+RUN chmod +x entrypoint.sh renew-certificate.sh healthcheck.sh
+
+## Disable setuid/setgid bits for the files inside container.
+RUN find / \( -path /proc -prune \) -o \( \( -perm -2000 -o -perm -4000 \) -print -exec chmod -s '{}' + \) || true
+
+## Update path to load appsmith utils tool as default
+ENV PATH /opt/appsmith/utils/node_modules/.bin:$PATH
+LABEL com.centurylinklabs.watchtower.lifecycle.pre-check=/watchtower-hooks/pre-check.sh
+LABEL com.centurylinklabs.watchtower.lifecycle.pre-update=/watchtower-hooks/pre-update.sh
+COPY ./deploy/docker/watchtower-hooks /watchtower-hooks
+RUN chmod +x /watchtower-hooks/pre-check.sh
+RUN chmod +x /watchtower-hooks/pre-update.sh
+
+
+EXPOSE 80
+EXPOSE 443
+ENTRYPOINT [ "/opt/appsmith/entrypoint.sh" ]
+HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/opt/appsmith/healthcheck.sh"
+CMD ["/usr/bin/supervisord", "-n"]
+```
+
+## 疑难杂症
+
+### dockerhub 登录不上
+
+报错信息：
+
+```
+Error saving credentials: error storing credentials - err: exit status 1, out:
+`Post "https://hub.docker.com/v2/users/login?refresh_token=true": dialing hub.docker.com:443 with direct connection: connecting to 202.160.129.164:443: dial tcp 202.160.129.164:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.`
+```
+
+#### 解决方案：
+
+- 删除配置文件
+- 修改配置文件
+
+方案一：删除 docker 的配置文件（C:\Users\用户名\\.docker\config.json）；
+
+重新执行`docker login`，输入账号密码即可；
+
+方案二：或者修改配置文件，将`credsStore`和`auth`的值换成这样的：
+
+```json
+{
+  "auths": {
+    "https://index.docker.io/v1/": {}
+  },
+  "credsStore": "wincred"
+}
+```
+
+#### 参考链接
+
+- https://juejin.cn/post/7236372621000015933
+- https://stackoverflow.com/questions/42787779/docker-login-error-storing-credentials-write-permissions-error
+
+### 启动容器 No such file or directory
+
+容器日志：
+
+> mkdir: cannot create directory ‘’: No such file or directory

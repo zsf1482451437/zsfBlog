@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 指定要处理的 markdown 文件
-markdown_file="./06-react.mdx"
+markdown_file="./03-docker.mdx"
 
 # 使用sed命令升高标题级别
 sed -E -i'' 's/^(#+)\s+(.*)$/#\1 \2/' "$markdown_file"
