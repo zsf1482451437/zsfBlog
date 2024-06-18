@@ -86,7 +86,7 @@ const config: Config = {
           items: [
             {
               label: '知识体系',
-              to: '/docs/intro',
+              to: '/docs/自我介绍',
             },
           ],
         },
@@ -112,7 +112,7 @@ const config: Config = {
           items: [
             {
               label: '知识体系',
-              to: '/docs/intro',
+              to: '/docs/自我介绍',
             },
             {
               label: 'GitHub',
