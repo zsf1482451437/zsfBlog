@@ -10,19 +10,19 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: "待定",
+    title: "勇敢",
     Svg: require("@site/static/img/undraw_docusaurus_mountain.svg").default,
-    description: <>还不知道写什么</>,
+    description: <>“Brave”</>,
   },
   {
-    title: "待定",
+    title: "坚定",
     Svg: require("@site/static/img/undraw_docusaurus_tree.svg").default,
-    description: <>还不知道写什么</>,
+    description: <>“Firm”</>,
   },
   {
-    title: "待定",
+    title: "自信",
     Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
-    description: <>还不知道写什么</>,
+    description: <>“Confident”</>,
   },
 ];
 
