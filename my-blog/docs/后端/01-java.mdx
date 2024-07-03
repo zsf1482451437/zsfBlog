@@ -7,24 +7,24 @@ description: 稳定、跨平台、面向对象的编程语言。
 ## 路线
 
 1. 阶段入门
-   - 编程基础（java特点、环境搭建、**基础语法**、数组、**面向对象**、抽象类、接口、枚举、常用类、集合类、泛型、异常处理、多线程、io流、反射）【韩顺平30天零基础】
-   - java8（Stream API、lambda表达式、新日期时间、接口默认方法）【宋红康java零基础，java8部分】
+   - 编程基础（java 特点、环境搭建、**基础语法**、数组、**面向对象**、抽象类、接口、枚举、常用类、集合类、泛型、异常处理、多线程、io 流、反射）【韩顺平 30 天零基础】
+   - java8（Stream API、lambda 表达式、新日期时间、接口默认方法）【宋红康 java 零基础，java8 部分】
 2. 计算机基础
-   - 计算机网络（http&https协议、网络类型、udp/tcp协议、网络安全、域名解析）
+   - 计算机网络（http&https 协议、网络类型、udp/tcp 协议、网络安全、域名解析）
    - 操作系统（进程&线程通讯、调度、状态、死锁、内存管理）
 3. 企业开发基础
-   - mySQL数据库（mysql搭建、语句、约束、索引、事务、设计数据库表、性能优化）【老杜-mysql基础入门】
+   - mySQL 数据库（mysql 搭建、语句、约束、索引、事务、设计数据库表、性能优化）【老杜-mysql 基础入门】
    - 开发框架（javaWeb、**Spring5**、**SpringMvc**、**mybatis**、mybatis plus、SpringBoot2、SpringSecurity、Maven）【尚硅谷系列】
    - 开发规范
-   - Linux（进程、网络、软件包、服务、日志、linux内核、常用命令、常用环境搭建、shell脚本、vim的使用）【韩顺平linux】
+   - Linux（进程、网络、软件包、服务、日志、linux 内核、常用命令、常用环境搭建、shell 脚本、vim 的使用）【韩顺平 linux】
 4. 企业开发进阶
    - 设计模式（创建型、结构型、行为型）
-   - 中间件（**Redis缓存**、**RabbitMQ消息队列**、**Nginx网关**）【尚硅谷系列】
-   - netty网络编程（io模型、channel、buffer、selector、netty模型、websocket编程-搭个聊天室）【尚硅谷】
+   - 中间件（**Redis 缓存**、**RabbitMQ 消息队列**、**Nginx 网关**）【尚硅谷系列】
+   - netty 网络编程（io 模型、channel、buffer、selector、netty 模型、websocket 编程-搭个聊天室）【尚硅谷】
    - 微服务（**dubbo**、**微服务**、**接口管理**）
    - 容器（docker、k8s）【狂神】
    - ci/cd【狂神】
-5. java高级
+5. java 高级
    - 并发编程
    - JVM【宋红康】
 6. 架构设计
@@ -64,7 +64,7 @@ description: 稳定、跨平台、面向对象的编程语言。
 
 - 增删改查
 - 全局配置
-- 动态SQL
+- 动态 SQL
 - 缓存
 - 逆向工程
 
@@ -75,17 +75,17 @@ description: 稳定、跨平台、面向对象的编程语言。
 - 高级特性
 - 本地热部署
 
-> redis缓存
+> redis 缓存
 
 - 数据类型
 - 常用操作
-- java操作redis
+- java 操作 redis
 - 主从模型搭建
 - 哨兵模型搭建
 - 日志持久化
 - 应用场景
 
-> rabbitMQ消息队列
+> rabbitMQ 消息队列
 
 - 消息队列的作用
 - 生产消费模型
@@ -93,12 +93,12 @@ description: 稳定、跨平台、面向对象的编程语言。
 - 死信队列
 - 延迟队列
 - 消息持久化
-- java操作
+- java 操作
 - 集群搭建
 
-> nginx网关
+> nginx 网关
 
-- Nginx作用
+- Nginx 作用
 - 正向代理
 - 反向代理（负载均衡）
 - 常用命令
@@ -119,8 +119,6 @@ description: 稳定、跨平台、面向对象的编程语言。
 - 概念
 - Spring cloud 框架
 - Spring cloud Alibaba
-
-
 
 ## 基础语法
 
@@ -230,15 +228,15 @@ public class Hello {
 
 编程语言中的变量，可以理解为一种容器。
 
-在 Java 中，变量有3种类型：
+在 Java 中，变量有 3 种类型：
 
 - 局部变量（方法体内声明）
-- 实例变量（没有STATIC 关键字声明+方法体外+特定于对象的）
+- 实例变量（没有 STATIC 关键字声明+方法体外+特定于对象的）
 - 静态变量（初始化一次+实例变量之前初始化）
 
 ```java
 class var1 {
-    static int a = 1; //静态变量 
+    static int a = 1; //静态变量
     int data = 99; //实例变量
     void method() {
         int b = 90;//局部变量
@@ -260,10 +258,10 @@ int a = 1; // 可以结合
 
 变量有很多类型，主要为两大类：
 
-- 原始数据类型（**布尔类型**和numeric类型，**numeric类型**包括**字符型**、**整型**、**浮点型**）
+- 原始数据类型（**布尔类型**和 numeric 类型，**numeric 类型**包括**字符型**、**整型**、**浮点型**）
 - 非原始数据类型（**类**、**数组**、**接口**等）
 
-![DataTypes](D:\workspace\zsfBlog\my-blog\docs\后端\img\DataTypes.webp)
+![DataTypes](./img/DataTypes.webp)
 
 原始数据类型是在 Java 语言中预定义和可用的（**CPU 可以直接进行运算**）。原始值不与其他原始值共享状态；
 
@@ -280,7 +278,7 @@ int (4 bytes)
 long (8 bytes)
 ```
 
-![java-varaibles](D:\workspace\zsfBlog\my-blog\docs\后端\img\java-varaibles.webp)
+![java-varaibles](./img/java-varaibles.webp)
 
 计算机内存的**最小存储单元**是字节（**byte**），一个字节就是一个**8 位**二进制数，即 8 个**bit**。
 
@@ -344,11 +342,9 @@ char zh = '中';
 
 记住：
 
-- 所有numeric类型均带符号 (+/-)
+- 所有 numeric 类型均带符号 (+/-)
 - 数据类型的大小在所有平台上保持相同（标准化）
-- Java中的char数据类型是2个字节，因为它使用UNICODE字符集。凭借它，Java 支持国际化。 UNICODE 是一个字符集，涵盖了世界上所有已知的文字和语言
-
-
+- Java 中的 char 数据类型是 2 个字节，因为它使用 UNICODE 字符集。凭借它，Java 支持国际化。 UNICODE 是一个字符集，涵盖了世界上所有已知的文字和语言
 
 #### 非原始数据类型
 
@@ -680,17 +676,15 @@ public class Main {
 **if**
 
 ```java
-public class IfExample {  
-    public static void main(String[] args) {  
-        int age=20;  
-        if(age>18){  
-            System.out.print("Age is greater than 18");  
-        }  
-    }  
-}  
+public class IfExample {
+    public static void main(String[] args) {
+        int age=20;
+        if(age>18){
+            System.out.print("Age is greater than 18");
+        }
+    }
+}
 ```
-
-
 
 #### 输出
 
@@ -797,9 +791,66 @@ Java 中最重要的方法是 main() 方法;
 - 方法头部（访问说明符、返回值类型、方法名、参数列表，其中方法名+参数列表=**方法签名**）
 - 方法体
 
-![method-in-java](D:\workspace\zsfBlog\my-blog\docs\后端\img\method-in-java.png)
+![method-in-java](./img/method-in-java.png)
 
+Java 提供了四种类型的**访问说明符**：
 
+- public，**所有类**都可以访问该方法；
+- private，该方法只能在**定义它的类**中访问；
+- protect，该方法可以被**同一个包内的类**以及**所有子类**访问；
+- default，它只能从**同一个包中**可见；
+
+```java
+public class User {
+    public String username; // 公开访问，任何地方都可以访问
+    protected String chatRoomId; // 受保护访问，只有同一个包内的类和所有子类可以访问
+    String status; // 默认访问（包访问），只有同一个包内的类可以访问
+    private String password; // 私有访问，只有User类内部可以访问
+
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
+        this.status = "online"; // 默认状态为在线
+    }
+
+    protected void joinChatRoom(String chatRoomId) {
+        this.chatRoomId = chatRoomId; // 加入聊天室
+    }
+
+    void updateStatus(String status) {
+        this.status = status; // 更新状态
+    }
+
+    private boolean checkPassword(String password) {
+        return this.password.equals(password); // 检查密码是否正确
+    }
+
+    public boolean authenticate(String password) {
+        return checkPassword(password); // 对外提供的认证方法
+    }
+}
+```
+
+- `username`是`public`的，意味着任何地方都可以直接访问用户的用户名。
+- `chatRoomId`是`protected`的，只有`User`类、`User`类的子类或者同一个包内的其他类可以访问用户所在的聊天室 ID。
+- `status`没有访问说明符，即默认访问级别，只有同一个包内的类可以访问用户的状态。
+- `password`是`private`的，只有`User`类内部的方法可以访问用户的密码。
+
+**返回类型**
+
+返回类型是该方法返回的数据类型。它可能具有**原始数据类型**、**对象**、**集合**、**void** 等。如果该方法没有返回任何内容，则使用 void 关键字；
+
+**方法名称**
+
+它是用于定义方法名称的唯一名称。它必须与方法的功能相对应。假设，如果我们要创建一个减去两个数字的方法，方法名称必须是 subtraction(), 方法按其名称调用;
+
+**参数列表**
+
+它是用逗号分隔并括在一对括号中的参数列表。它包含**数据类型**和**变量名称**。如果该方法没有参数，则将括号留空;
+
+**方法体**
+
+它是方法声明的一部分，它包含要执行的所有操作，它被包裹在一对大括号内；
 
 ### 数组
 
@@ -1211,6 +1262,55 @@ public class Main {
 ```
 
 ## 面向对象
+
+### 概念
+
+- 对象
+- 类
+- 继承
+- 多态
+- 抽象
+- 封装
+- 耦合
+- 内聚
+- 关联
+- 组合
+
+**对象**
+
+任何具有状态和行为的实体都称为对象。例如，椅子、笔、桌子、键盘、自行车等；
+
+对象可以是类的实例。对象包含一个地址，并在内存中占用一些空间；
+
+对象可以在不知道彼此的数据或代码的详细信息的情况下进行通信，唯一必要的是接受的消息类型和对象返回的响应类型；
+
+> 例子
+
+狗是一个对象，因为它具有颜色、名称、品种等状态，以及摇尾巴、吠叫、进食等行为；
+
+对象的集合称为类, 它是一个逻辑实体;
+
+类可以成为创建对象的蓝图，类不占用任何空间；
+
+**继承**
+
+当一个对象获取父对象的所有属性和行为时，它称为继承。它提供了代码的**可重用性**。它用于实现运行时多态性。
+
+**多态**
+
+如果一项任务以**不同的方式**执行，则称为多态性。例如：以不同的方式说服客户，画一些东西，例如形状、三角形、矩形等；
+
+在 Java 中，使用**方法重载**和**方法重写**来实现多态性。
+
+**抽象**
+
+隐藏内部细节并显示功能称为抽象。例如电话，我们不知道内部处理；
+
+**封装**
+
+将**代码和数据**绑定（或包装）到一个单元中称为封装。例如，胶囊，它包裹不同的药物。
+
+java 类是封装的示例。Java bean 是完全封装的类，因为这里的所有数据成员都是私有的。
 
 ### 基础
 
