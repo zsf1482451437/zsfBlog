@@ -2,7 +2,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
-import { APP_ID, SEARCH_KEY, INDEX_NAME, WEBSITE_URL, REPO_NAME } from './config';
+import { APP_ID, SEARCH_KEY, INDEX_NAME, WEBSITE_URL, REPO_NAME, JUEJIN_LINK, GITHUB_LINK, PLAYGROUND_LINK } from './config';
 
 const config: Config = {
   title: '平头哥',
@@ -95,12 +95,9 @@ const config: Config = {
           position: 'left',
           label: '知识体系',
         },
-        {to: 'https://juejin.cn/user/2964734936622894/posts', label: '掘金', position: 'left'},
-        {
-          href: 'https://github.com/zsf1482451437',
-          label: 'GitHub',
-          position: 'right',
-        },
+        { to: JUEJIN_LINK, label: '掘金', position: 'left' },
+        { to: PLAYGROUND_LINK, label: 'react操场', position: 'left' },
+        { href: GITHUB_LINK, label: 'GitHub', position: 'right'},
       ],
     },
     footer: {
