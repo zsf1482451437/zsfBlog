@@ -65,6 +65,7 @@ const config: Config = {
       "@docusaurus/plugin-client-redirects",
       {
         createRedirects(existingPath) {
+          console.log(existingPath);
           // 除了 /docs 开头的路径和 / 之外，其他路径都会被重定向到 /docs 开头的路径
           if (!existingPath.startsWith("/docs") && existingPath !== "/") {
             return [`/docs${existingPath}`];
