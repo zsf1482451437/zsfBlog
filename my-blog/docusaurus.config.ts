@@ -60,21 +60,20 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
-  plugins: [
-    [
-      "@docusaurus/plugin-client-redirects",
-      {
-        createRedirects(existingPath) {
-          console.log(existingPath);
-          // 除了 /docs 开头的路径和 / 之外，其他路径都会被重定向到 /docs 开头的路径
-          if (!existingPath.startsWith("/docs") && existingPath !== "/") {
-            return [`/docs${existingPath}`];
-          }
-          return undefined;
-        },
-      },
-    ],
-  ],
+  // plugins: [
+  //   [
+  //     "@docusaurus/plugin-client-redirects",
+  //     {
+  //       createRedirects(existingPath) {
+  //         // 除了 /docs 开头的路径和 / 之外，其他路径都会被重定向到 /docs 开头的路径
+  //         if (!existingPath.startsWith("/docs") && existingPath !== "/") {
+  //           return [`/docs${existingPath}`];
+  //         }
+  //         return undefined;
+  //       },
+  //     },
+  //   ],
+  // ],
 
   themeConfig: {
     algolia: {
@@ -89,10 +88,10 @@ const config: Config = {
       externalUrlRegex: "external\\.com|domain\\.com",
 
       // Optional: Replace parts of the item URLs from Algolia. Useful when using the same search index for multiple deployments using a different baseUrl. You can use regexp or string in the `from` param. For example: localhost:3000 vs myCompany.com/docs
-      replaceSearchResultPathname: {
-        from: "/docs/", // or as RegExp: /\/docs\//
-        to: "/",
-      },
+      // replaceSearchResultPathname: {
+      //   from: "/docs/", // or as RegExp: /\/docs\//
+      //   to: "/",
+      // },
 
       // Optional: Algolia search parameters
       searchParameters: {},
