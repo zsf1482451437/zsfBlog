@@ -12,11 +12,11 @@ description: 分布式、高效、版本控制系统。
 
 **Remote：远程仓库**，用来托管代码的服务器，远程仓库的内容能够被分布在多个地点的处于协作关系的本地仓库修改，本地仓库修改完代码后通过 `git push` 命令同步代码到远程仓库。
 
-## 工作流程
+# 工作流程
 
 1.在工作区开发，添加，修改文件。 2.将修改后的文件放入暂存区。 3.将暂存区域的文件提交到本地仓库。 4.将本地仓库的修改推送到远程仓库。
 
-## 基本操作
+# 基本操作
 
 ### git add
 
@@ -150,7 +150,9 @@ git config user.name
 git config core.editor
 
 设置全局邮箱：
-git config --global user.name "xxx"
+git config --global user.email "xxx"
+设置当前仓库邮箱：
+git config user.email "xxx"
 查看 Git 的所有配置信息：
 
 git config --list --show-origin
