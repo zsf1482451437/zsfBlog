@@ -1116,7 +1116,7 @@ h1 {
 
 在前面的 CSS 代码段中，浏览器在解析页面 HTML 中的 `<h1>` 元素时下载 `"Open Sans"` 字体文件。
 
-#### preload
+##### reload
 
 `@font-face` 如果声明是在**外部样式表**中定义的，则浏览器只能在下载样式表后才能开始下载它们；
 
@@ -1137,11 +1137,38 @@ h1 {
 
 > 此外，还需要注意的是，字体是 CORS 资源。因此，必须在预加载字体时指定该 `crossorigin` 属性，即使它们是自托管的。
 
-#### 内联 `@font-face` 声明
+##### 内联 `@font-face` 声明
 
 通过使用 `<style>` 元素在 HTML `<head>` 中内联渲染阻塞 CSS（包括 `@font-face` 声明），可以使字体在页面加载期间更早地被发现;
 
 在这种情况下，浏览器会在页面加载的早期发现 Web 字体，因为它不需要等待外部样式表下载;
+
+#### 下载
+
+在发现 Web 字体并确保当前页面布局需要它们后，浏览器可以下载它们；
+
+Web 字体的数量、编码和文件大小会显著影响浏览器**下载**和**呈现** Web 字体的速度；
+
+##### 自托管web字体
+
+Web 字体可以通过第三方服务（例如 [Google Fonts](https://fonts.google.com/)）提供，也可以在服务器上自托管；
+
+使用第三方服务时，网页需要先打开与提供商主机的连接，然后才能开始下载所需的网络字体；
+
+这可能会延迟 Web 字体的发现和后续下载；
+
+可以使用资源提示来 `preconnect` 减少此开销；
+
+通过使用 `preconnect` ，可以告诉浏览器比浏览器通常更早地打开与跨源的连接：
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">  
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+```
+
+前面的 HTML 代码段提示浏览器要建立与 `fonts.googleapis.com` 的连接以及与 [的 CORS](https://developer.mozilla.org/docs/Web/HTTP/CORS) 连接 `fonts.gstatic.com` ；
+
+某些字体提供商（例如 Google Fonts）提供来自不同来源的 CSS 和字体资源；
 
 ### js 代码切分
 
