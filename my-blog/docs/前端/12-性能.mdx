@@ -1170,6 +1170,34 @@ Web 字体可以通过第三方服务（例如 [Google Fonts](https://fonts.goog
 
 某些字体提供商（例如 Google Fonts）提供来自不同来源的 CSS 和字体资源；
 
+可以通过自托管 Web 字体来消除对第三方连接的需求；
+
+在大多数情况下，自托管 Web 字体比从跨域下载它们更快；
+
+如果计划使用自托管 Web 字体，请检查网站是否正在使用[内容分发网络 （CDN）、](https://web.dev/articles/content-delivery-networks)[HTTP/2](https://web.dev/articles/performance-http2) 或 HTTP/3，并为网站所需的 Web 字体设置正确的缓存标头；
+
+##### WOFF2
+
+[WOFF2](https://www.w3.org/TR/WOFF2/) 享有[广泛的浏览器支持](https://caniuse.com/woff2)和最佳压缩 - 比 WOFF 高出 30%；
+
+减小文件大小会导致更快的下载时间，WOFF2 格式通常是在现代浏览器之间完全兼容唯一需要的格式；
+
+> **注意：**只有在需要支持旧版浏览器时，才可能需要使用其他格式（如 WOFF、EOT 和 TTF）。如果*不需要*支持旧版浏览器，则没有理由依赖 WOFF2 以外的 Web 字体格式。
+
+##### 子集web字体
+
+Web 字体通常包含各种不同的**字形**，这些[字形](https://en.wikipedia.org/wiki/Glyph)是表示不同语言中使用的各种字符所必需的；
+
+如果页面仅以一种语言提供内容，或使用单一字母表，则可以通过**子集**来减小 Web 字体的大小；
+
+这通常是通过指定一个数字或[一系列 Unicode 码位](https://en.wikipedia.org/wiki/Code_point#In_Unicode)来完成的；
+
+子集是原始 Web 字体文件中包含的字形的简化集；
+
+例如，网页可能会提供拉丁字符的特定子集，而不是提供所有字形；
+
+根据所需的子集，删除字形可以显著减小字体文件的大小；
+
 ### js 代码切分
 
 有些资源对网页的初始加载并不重要。JavaScript 就是这样一种资源，它可以通过一种称为代码分割的技术延迟到需要的时候。通过这样做，可以通过降低带宽和 CPU 争用来提高性能，这是在启动期间提高初始页面加载速度和输入响应性的关键考虑因素。
