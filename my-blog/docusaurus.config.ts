@@ -11,6 +11,7 @@ import {
   JUEJIN_LINK,
   GITHUB_LINK,
   PLAYGROUND_LINK,
+  TRACKING_ID,
 } from "./config";
 
 const config: Config = {
@@ -57,23 +58,13 @@ const config: Config = {
         theme: {
           customCss: "./src/css/custom.css",
         },
+        gtag: {
+          trackingID: TRACKING_ID,
+          anonymizeIP: true,
+        },
       } satisfies Preset.Options,
     ],
   ],
-  // plugins: [
-  //   [
-  //     "@docusaurus/plugin-client-redirects",
-  //     {
-  //       createRedirects(existingPath) {
-  //         // 除了 /docs 开头的路径和 / 之外，其他路径都会被重定向到 /docs 开头的路径
-  //         if (!existingPath.startsWith("/docs") && existingPath !== "/") {
-  //           return [`/docs${existingPath}`];
-  //         }
-  //         return undefined;
-  //       },
-  //     },
-  //   ],
-  // ],
 
   themeConfig: {
     algolia: {
