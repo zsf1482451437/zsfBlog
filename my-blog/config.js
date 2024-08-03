@@ -8,3 +8,7 @@ export const PLAYGROUND_LINK = "https://react-playground-xi.vercel.app/";
 export const JUEJIN_LINK = "https://juejin.cn/user/2964734936622894/posts";
 export const GITHUB_LINK = "https://github.com/zsf1482451437";
 export const WEBSITE_URL = "https://zsf-blog.vercel.app/";
+
+// export const HOST = "http://localhost";
+export const HOST = "https://zsf-blog.vercel.app";
+export const PORT = 3001;
