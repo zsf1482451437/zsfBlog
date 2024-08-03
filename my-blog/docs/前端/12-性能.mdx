@@ -1192,11 +1192,53 @@ Web 字体通常包含各种不同的**字形**，这些[字形](https://en.wiki
 
 这通常是通过指定一个数字或[一系列 Unicode 码位](https://en.wikipedia.org/wiki/Code_point#In_Unicode)来完成的；
 
-子集是原始 Web 字体文件中包含的字形的简化集；
+子集是原始 Web 字体文件中包含的字形的**简化集**；
 
 例如，网页可能会提供拉丁字符的特定子集，而不是提供所有字形；
 
 根据所需的子集，删除字形可以显著减小字体文件的大小；
+
+某些 Web 字体提供商（例如 Google Fonts）通过使用**查询字符串参数**自动提供子集；
+
+例如， `https://fonts.googleapis.com/css?family=Roboto&subset=latin` URL 提供一个样式表，其中包含仅使用拉丁字母的 Roboto Web 字体；
+
+如果决定自行托管 Web 字体，下一步是使用 [glyphanger](https://github.com/zachleat/glyphhanger) 或 [subfont](https://github.com/Munter/subfont) 等工具自行生成和托管这些子集；
+
+但是，如果不想自行托管自己的 Web 字体，则可以通过指定仅包含网站所需的 **Unicode** 码位的附加 `text` 查询字符串参数来子集 Google Fonts 提供的 Web 字体；
+
+例如，如果网站上有一个显示 Web 字体，该字体只需要短语“Welcome”所需的少量字符，则可以通过以下 URL 通过 Google Fonts 请求该子集： `https://fonts.googleapis.com/css?family=Monoton&text=Welcome` ；
+
+如果这种极端的子集对网站有用，这可以*显着*减少您网站上单一字体所需的 Web 字体数据量；
+
+#### 字体渲染
+
+在浏览器发现并下载了 Web 字体后，可以对其进行呈现；
+
+默认情况下，浏览器会**阻止**使用 Web 字体的任何文本的呈现，直到下载该文本为止；
+
+可以使用 [`font-display` CSS 属性](https://developer.mozilla.org/docs/Web/CSS/@font-face/font-display)调整浏览器的文本呈现行为，并配置在 Web 字体完全加载之前应显示或不显示的文本；
+
+##### block
+
+ `font-display` 缺省值为 `block` ，使用 `block` 时，浏览器将阻止使用指定 Web 字体的任何文本的呈现；
+
+不同的浏览器的行为略有不同。Chromium 和 Firefox 会阻止渲染最多 3 秒，然后再使用回退；
+
+Safari 会无限期阻止，直到 Web 字体加载完毕；
+
+##### swap
+
+[`swap` 是使用 `font-display` 最广泛的值](https://almanac.httparchive.org/en/2022/fonts#fig-13)， `swap` 不阻止呈现，并在交换指定的 Web 字体之前立即在回退中显示文本；
+
+这可以立即显示内容，而无需等待 Web 字体下载；
+
+但是，缺点 `swap` 是，如果后备 Web 字体和 CSS 中指定的 Web 字体在行高、字距调整和其他字体指标方面差异很大，则会导致布局偏移;
+
+如果不考虑尽快使用 `preload` 提示来加载 Web 字体资源，或者不考虑其他 `font-display` 值，这可能会影响网站的 [CLS](https://web.dev/articles/cls);
+
+##### fallback
+
+`fallback` 的值 `font-display` 是 和 `swap` 之间的 `block` 某种折衷。与 不同 `swap` ，浏览器会阻止字体的呈现，但仅在很短的时间内交换回退文本。然而，与 不同的 `block` 是，封锁期非常短。
 
 ### js 代码切分
 
