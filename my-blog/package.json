@@ -5,7 +5,6 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "server": "node server/server.js",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
@@ -19,11 +18,8 @@
     "@docusaurus/core": "^3.4.0",
     "@docusaurus/plugin-client-redirects": "^3.4.0",
     "@docusaurus/preset-classic": "^3.4.0",
-    "@koa/cors": "^5.0.0",
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
-    "koa": "^2.15.3",
-    "koa-router": "^12.0.1",
     "prism-react-renderer": "^2.3.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
