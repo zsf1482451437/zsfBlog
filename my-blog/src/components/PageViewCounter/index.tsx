@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "@docusaurus/router";
 
-import { HOST, PORT } from "@site/config";
+import { HOST } from "@site/config";
 
 function PageViewCounter() {
   const [count, setCount] = useState(null);
@@ -9,7 +9,7 @@ function PageViewCounter() {
 
   useEffect(() => {
     // 增加页面浏览次数
-    fetch(`${HOST}:${PORT}/pageviews?path=${location.pathname}`, {
+    fetch(`${HOST}/api/pageviews?path=${location.pathname}`, {
       method: "POST",
     })
       .then((response) => response.json())
