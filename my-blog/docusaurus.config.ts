@@ -12,6 +12,8 @@ import {
   GITHUB_LINK,
   PLAYGROUND_LINK,
   TRACKING_ID,
+  PORT,
+  HOST,
 } from "./config";
 
 const config: Config = {
@@ -163,6 +165,13 @@ const config: Config = {
       darkTheme: prismThemes.dracula,
     },
   } satisfies Preset.ThemeConfig,
+
+  scripts: [
+    {
+      src: `${HOST}:${PORT}/pageviews`,
+      async: true,
+    },
+  ],
 };
 
 export default config;
