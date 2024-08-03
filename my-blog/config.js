@@ -10,6 +10,5 @@ export const GITHUB_LINK = "https://github.com/zsf1482451437";
 export const WEBSITE_URL = "https://zsf-blog.vercel.app/";
 
 // export const HOST = "http://localhost";
-export const HOST =
-  "https://blog-server-60ojrbvj9-zhaisifengs-projects.vercel.app";
+export const HOST = "https://blog-server-gules-three.vercel.app";
 export const PORT = 3001;
