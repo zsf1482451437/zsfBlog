@@ -9,7 +9,7 @@ function PageViewCounter() {
 
   useEffect(() => {
     // 增加页面浏览次数
-    fetch(`${HOST}/api/incrementPageViews?path=${location.pathname}`, {
+    fetch(`${HOST}/incrementPageViews?path=${location.pathname}`, {
       method: "POST",
     })
       .then((response) => response.json())
