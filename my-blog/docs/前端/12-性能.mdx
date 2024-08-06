@@ -1240,9 +1240,56 @@ Safari 会无限期阻止，直到 Web 字体加载完毕；
 
 `fallback` 的值 `font-display` 是 和 `swap` 之间的 `block` 某种折衷。与 不同 `swap` ，浏览器会阻止字体的呈现，但仅在很短的时间内交换回退文本。然而，与 不同的 `block` 是，封锁期非常短。
 
-### js 代码切分
+### js 拆分
 
-有些资源对网页的初始加载并不重要。JavaScript 就是这样一种资源，它可以通过一种称为代码分割的技术延迟到需要的时候。通过这样做，可以通过降低带宽和 CPU 争用来提高性能，这是在启动期间提高初始页面加载速度和输入响应性的关键考虑因素。
+加载大型 JavaScript 资源会显著影响页面速度;
+
+将 JavaScript **拆分**为较小的块，并且仅在启动期间下载页面运行所需的内容，可以大大提高页面的[加载响应能力](https://web.dev/articles/tbt)，这反过来又可以改善页面[的 Interaction to Next Paint （INP）。](https://web.dev/articles/inp);
+
+当页面下载、解析和编译大型 JavaScript 文件时，它可能会在一段时间内无响应;
+
+页面元素是可见的，因为它们是页面初始 HTML 的一部分，并由 CSS 设置样式;
+
+但是，由于支持这些**交互式元素**所需的 JavaScript 以及页面加载的其他脚本可能需要解析和执行 JavaScript 才能运行;
+
+结果是，用户可能会觉得交互被显着**延迟**，甚至完全中断;
+
+这通常是因为主线程被阻塞，因为 JavaScript 是在**主线程**上解析和编译的;
+
+如果此过程花费的时间太长，交互式页面元素可能无法足够快地响应用户输入;
+
+对此的一种**补救措施**是仅加载页面运行所需的 JavaScript，同时通过一种称为**代码拆分**的技术推迟其他 JavaScript 的加载;
+
+#### 减少启动期间js的解析和执行
+
+当 JavaScript 执行时间超过 2 秒时，[Lighthouse](https://developer.chrome.com/docs/lighthouse/overview/) 会发出警告[，当执行时间超过 3.5 秒时](https://developer.chrome.com/docs/lighthouse/performance/bootup-time/)，它会失败;
+
+在页面生命周期*的任何时候，*过多的 JavaScript 解析和执行都是一个潜在的问题;
+
+因为如果用户与页面交互的时间与负责处理和执行 JavaScript 的主线程任务运行的时刻**重合**，则有可能增加交互的[*输入延迟*](https://web.dev/articles/optimize-input-delay);
+
+不仅如此，在初始页面加载期间，过多的 JavaScript 执行和解析尤其成问题，因为这是页面生命周期中用户很可能与页面交互的点；
+
+事实上，[总阻塞时间 （TBT）（](https://web.dev/articles/tbt)一种负载响应能力指标）与 [INP](https://web.dev/articles/inp) [高度相关](https://almanac.httparchive.org/en/2022/performance#inp-and-tbt)，这表明用户在**初始页面加载期间**尝试交互的倾向很高；
+
+**Lighthouse** 审计报告执行页面请求的每个 JavaScript 文件所花费的时间，它非常有用，因为它可以帮助准确识别哪些脚本可能是[*代码拆分*](https://web.dev/articles/reduce-javascript-payloads-with-code-splitting)的候选脚本；
+
+然后，可以使用 Chrome DevTools 中的[覆盖率工具](https://developer.chrome.com/docs/devtools/coverage/)进一步确定在页面加载期间页面的哪些 JavaScript 部分未使用；
+
+代码拆分是一种有用的技术，可以减少页面的初始 JavaScript 负载。它允许将 JavaScript 包拆分为两部分：
+
+- JavaScript 在页面加载时需要，因此无法在任何其他时间加载。
+- 可以在稍后的时间点加载的剩余 JavaScript，最常见的是在用户与页面上的给定交互元素交互时。
+
+可以使用[动态 `import()` ](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/import)语法来完成代码拆分，与在**启动期间**请求给定 JavaScript 资源的元素不同 `<script>` ，此语法会在**页面生命周期的后期**对 JavaScript 资源发出请求；
+
+> **重要**
+
+动态`import()` 是一个类似函数的表达式，可让动态加载 JavaScript 模块；
+
+它是一种**异步操作**，可用于导入模块以响应交互或想要加载其他模块的任何其他条件；
+
+[Static `import` ](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/import)语句会立即导入模块，并要求先解析并执行**父模块**及其所有依赖项，然后才能运行；
 
 ### 懒加载图片和 iframe 元素
 
