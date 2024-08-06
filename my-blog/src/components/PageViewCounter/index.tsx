@@ -13,7 +13,7 @@ function PageViewCounter() {
       method: "POST",
     })
       .then((response) => response.json())
-      .then((data) => setCount(data.count))
+      .then((data) => setCount(data.pageViews))
       .catch((error) => console.error("更新页面浏览次数错误", error));
   }, [location.pathname]);
 
