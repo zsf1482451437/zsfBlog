@@ -54,4 +54,12 @@
   position: absolute;
   top: 78px;
   right: 520px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.count {
+  display: inline-block;
+  margin-bottom: 2px;
 }

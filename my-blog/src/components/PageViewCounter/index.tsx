@@ -20,7 +20,7 @@ function PageViewCounter() {
   return (
     <div className="pageViewCounter">
       <span className="iconfont">&#xe600;</span>
-      <span>{count}</span>
+      <span className="count">{count}</span>
     </div>
   );
 }
