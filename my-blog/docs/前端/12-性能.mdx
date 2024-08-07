@@ -1291,6 +1291,34 @@ Safari 会无限期阻止，直到 Web 字体加载完毕；
 
 [Static `import` ](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/import)语句会立即导入模块，并要求先解析并执行**父模块**及其所有依赖项，然后才能运行；
 
+```js
+document.querySelectorAll('#myForm input').addEventListener('blur', async () => {
+  // Get the form validation named export from the module through destructuring:
+  const { validateForm } = await import('/validate-form.mjs');
+
+  // Validate the form:
+  validateForm();
+}, { once: true });
+```
+
+在前面的 JavaScript 代码段中，仅当用户[模糊](https://developer.mozilla.org/docs/Web/API/Element/blur_event)表单的任何 `<input>` 字段时，才会下载、解析和执行该 `validate-form.mjs` 模块;
+
+在这种情况下，负责驱动表单验证逻辑的 JavaScript 资源仅在最有可能实际使用页面时才与页面相关;
+
+[Webpack](https://webpack.js.org/guides/code-splitting/)、[Parcel](https://parceljs.org/features/code-splitting/)、[Rollup](https://rollupjs.org/guide/en#dynamic-import) 和 [esbuild](https://esbuild.github.io/api/#splitting) 等 JavaScript 打包器可以配置为在源代码中遇到动态 `import()` 调用时将 JavaScript 包拆分为**更小的块**；
+
+这些工具中的大多数都是自动执行此操作的，但 esbuild 尤其需要选择此优化；
+
+> 注意
+
+[React](https://react.dev/) 通过**React.lazy**语法抽象了动态 `import()` 。在引擎盖下，这仍然依赖于 dynamic `import()` ，模块打包器仍然负责将 JavaScript 拆分为单独的块；
+
+#### 代码拆分说明
+
+虽然代码拆分是一种在**初始页面加载期间**减少主线程争用的有效方法，但如果决定去审计 JavaScript 源代码以寻找代码拆分的机会，那么记住一些事情是值得的；
+
+
+
 ### 懒加载图片和 iframe 元素
 
 image 和`<iframe>`元素会消耗大量的带宽和 CPU 处理时间。但是，并不是所有的图像和`<iframe>`元素都需要在初始页面加载期间加载，可以推迟到用户最有可能看到它们的时候。这种技术被称为惰性加载。在本模块中，解释了延迟加载图像和`<iframe>`元素，以便可以更快地加载页面，并且仅在需要时才消耗带宽和处理时间。
