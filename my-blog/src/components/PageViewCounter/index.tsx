@@ -17,11 +17,12 @@ function PageViewCounter() {
       .catch((error) => console.error("更新页面浏览次数错误", error));
   }, [location.pathname]);
 
-  if (count === null) {
-    return null; // 或显示加载指示器
-  }
-
-  return <div className="pageViewCounter">页面浏览次数：{count}</div>;
+  return (
+    <div className="pageViewCounter">
+      <span className="iconfont">&#xe600;</span>
+      <span>{count}</span>
+    </div>
+  );
 }
 
 export default PageViewCounter;

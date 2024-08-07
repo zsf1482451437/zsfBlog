@@ -5,6 +5,27 @@
  */
 
 /* You can override the default Infima variables here. */
+
+/* 在线链接服务仅供平台体验和调试使用，平台不承诺服务的稳定性，企业客户需下载字体包自行发布使用并做好备份。 */
+@font-face {
+  font-family: "iconfont"; /* Project id 4646029 */
+  src: url("//at.alicdn.com/t/c/font_4646029_3rfrv7oem82.woff2?t=1722999096092")
+      format("woff2"),
+    url("//at.alicdn.com/t/c/font_4646029_3rfrv7oem82.woff?t=1722999096092")
+      format("woff"),
+    url("//at.alicdn.com/t/c/font_4646029_3rfrv7oem82.ttf?t=1722999096092")
+      format("truetype");
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 24px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-stroke-width: 0.2px;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 :root {
   --ifm-color-primary: #2e8555;
   --ifm-color-primary-dark: #29784c;
@@ -32,5 +53,5 @@
 .pageViewCounter {
   position: absolute;
   top: 78px;
-  left: 640px;
+  right: 520px;
 }
