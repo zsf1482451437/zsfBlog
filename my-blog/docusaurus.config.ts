@@ -109,7 +109,7 @@ const config: Config = {
           label: "知识体系",
         },
         { to: JUEJIN_LINK, label: "掘金", position: "left" },
-        { to: PLAYGROUND_LINK, label: "react操场", position: "left" },
+        { to: PLAYGROUND_LINK, label: "复现广场", position: "left" },
         { href: GITHUB_LINK, label: "GitHub", position: "right" },
       ],
     },
