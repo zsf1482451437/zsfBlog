@@ -1313,11 +1313,31 @@ document.querySelectorAll('#myForm input').addEventListener('blur', async () => 
 
 [React](https://react.dev/) 通过**React.lazy**语法抽象了动态 `import()` 。在引擎盖下，这仍然依赖于 dynamic `import()` ，模块打包器仍然负责将 JavaScript 拆分为单独的块；
 
-#### 代码拆分说明
+#### 代码拆分建议
 
 虽然代码拆分是一种在**初始页面加载期间**减少主线程争用的有效方法，但如果决定去审计 JavaScript 源代码以寻找代码拆分的机会，那么记住一些事情是值得的；
 
+开发人员在开发过程中使用 [JavaScript 模块](https://developer.mozilla.org/docs/Web/JavaScript/Guide/Modules)是常见的做法；
 
+这是一项出色的开发人员体验改进，可提高代码的可读性和可维护性；
+
+但是，在将 JavaScript 模块运送到生产环境时，可能会导致一些次优的性能特征；
+
+##### 使用打包器
+
+最重要的是，你应该使用**打包器**来处理和优化你的源代码，包括你打算进行代码拆分的模块；
+
+打包器不仅在对 JavaScript 源代码应用优化方面非常有效，而且在平衡性能考虑因素（例如**包大小与压缩率**）方面也非常有效；
+
+压缩效率随着包的大小而增加，但包程序也试图确保包不会太大，以至于由于脚本评估而导致长时间的任务；
+
+捆绑器还可以避免通过网络运输大量未捆绑的模块的问题；
+
+使用 JavaScript 模块的体系结构往往具有庞大而复杂的模块树；
+
+当模块树解绑时，每个模块都表示一个单独的 HTTP 请求，如果不捆绑模块，Web 应用中的交互性可能会延迟；
+
+虽然可以使用[ 资源提示](https://developer.chrome.com/blog/modulepreload/)尽早加载大型模块树，但从加载性能的角度来看，JavaScript 包仍然更可取；
 
 ### 懒加载图片和 iframe 元素
 
