@@ -106,7 +106,7 @@ const config: Config = {
           type: "docSidebar",
           sidebarId: "tutorialSidebar",
           position: "left",
-          label: "知识体系",
+          label: "日积月累",
         },
         { to: JUEJIN_LINK, label: "掘金", position: "left" },
         { to: PLAYGROUND_LINK, label: "复现广场", position: "left" },
@@ -120,7 +120,7 @@ const config: Config = {
           title: "Docs",
           items: [
             {
-              label: "知识体系",
+              label: "日积月累",
               to: "/docs/自我介绍",
             },
           ],
@@ -146,7 +146,7 @@ const config: Config = {
           title: "更多",
           items: [
             {
-              label: "知识体系",
+              label: "日积月累",
               to: "/docs/自我介绍",
             },
             {
