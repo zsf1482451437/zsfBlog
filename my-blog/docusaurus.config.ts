@@ -109,7 +109,7 @@ const config: Config = {
           label: "日积月累",
         },
         { to: JUEJIN_LINK, label: "掘金", position: "left" },
-        { to: PLAYGROUND_LINK, label: "复现广场", position: "left" },
+        { to: PLAYGROUND_LINK, label: "知行合一", position: "left" },
         { href: GITHUB_LINK, label: "GitHub", position: "right" },
       ],
     },

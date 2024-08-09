@@ -1339,6 +1339,17 @@ document.querySelectorAll('#myForm input').addEventListener('blur', async () => 
 
 虽然可以使用[ 资源提示](https://developer.chrome.com/blog/modulepreload/)尽早加载大型模块树，但从加载性能的角度来看，JavaScript 包仍然更可取；
 
+##### 流式编译
+
+Chromium 的 V8 JavaScript 引擎提供了许多开箱即用的优化，以确保你的生产 JavaScript 代码尽可能高效地加载；
+
+其中一种优化被称为***流式编译***，它就像对流式传输到浏览器的 HTML 的**增量解析**一样，在流式传输的 JavaScript 块从网络到达时对其进行编译；
+
+可以通过以下几种方式确保在 Chromium 中对 Web 应用程序进行流式编译：
+
+- **转换生产代码以避免使用 JavaScript 模块。**打包器可以根据编译目标转换 JavaScript 源代码，而目标通常特定于给定的环境。V8 会将流式编译应用于任何不使用模块的 JavaScript 代码，可以配置打包器以将 JavaScript 模块代码转换为不使用 JavaScript 模块及其功能的语法；
+- 
+
 ### 懒加载图片和 iframe 元素
 
 image 和`<iframe>`元素会消耗大量的带宽和 CPU 处理时间。但是，并不是所有的图像和`<iframe>`元素都需要在初始页面加载期间加载，可以推迟到用户最有可能看到它们的时候。这种技术被称为惰性加载。在本模块中，解释了延迟加载图像和`<iframe>`元素，以便可以更快地加载页面，并且仅在需要时才消耗带宽和处理时间。
