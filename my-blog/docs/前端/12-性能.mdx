@@ -1347,8 +1347,51 @@ Chromium 的 V8 JavaScript 引擎提供了许多开箱即用的优化，以确�
 
 可以通过以下几种方式确保在 Chromium 中对 Web 应用程序进行流式编译：
 
-- **转换生产代码以避免使用 JavaScript 模块。**打包器可以根据编译目标转换 JavaScript 源代码，而目标通常特定于给定的环境。V8 会将流式编译应用于任何不使用模块的 JavaScript 代码，可以配置打包器以将 JavaScript 模块代码转换为不使用 JavaScript 模块及其功能的语法；
-- 
+- **转换生产代码。**打包器可以根据编译目标转换 JavaScript 源代码，而目标通常特定于给定的环境；V8 会将流式编译应用于任何**不使用模块**的 JavaScript 代码，可以配置打包器以将 JavaScript 模块代码转换为不使用 JavaScript 模块及其功能的语法；
+- **使用 `.mjs` 后缀。**就 V8 而言，使用扩展在生产环境中发布 JavaScript 模块时， 当你在生产环境中使用.js扩展名发布JavaScript模块时，你实际上选择了退出流编译。如果您将扩展 `.mjs` 用于 JavaScript 模块，V8 可以确保基于模块的 JavaScript 代码的流式编译**不会中断**。
+
+不要让这些注意事项阻止使用代码拆分，代码拆分是减少用户初始 JavaScript 负载的有效方法，但通过使用打包器并了解如何保留 V8 的流式编译行为，可以确保生产 JavaScript 代码对用户来说尽可能快；
+
+#### webpack
+
+[webpack](https://webpack.js.org/guides/code-splitting/) 附带了一个名为[`SplitChunksPlugin`](https://webpack.js.org/plugins/split-chunks-plugin/) 的插件，它允许您配置打包器如何分割 JavaScript 文件。Webpack 可以识别 dynamic `import()` 和 static `import` 语句。可以通过在其配置中指定 `chunks` 选项来修改其 `SplitChunksPlugin` 行为：
+
+- `chunks: async` 是默认值，引用动态 `import()` 调用；
+- `chunks: initial` 指静态 `import` 调用；
+- `chunks: all` 涵盖动态 `import()` 和静态导入，在`async` 和 `initial` IMPORT 之间共享块；
+
+
+默认情况下，每当 webpack 遇到 dynamic `import()` 语句时。它为该模块创建一个单独的块：
+
+```js
+/* main.js */
+
+// An application-specific chunk required during the initial page load:
+import myFunction from './my-function.js';
+
+myFunction('Hello world!');
+
+// If a specific condition is met, a separate chunk is downloaded on demand,
+// rather than being bundled with the initial chunk:
+if (condition) {
+  // Assumes top-level await is available. More info:
+  // https://v8.dev/features/top-level-await
+  await import('/form-validation.js');
+}
+```
+
+上述代码片段的默认 webpack 配置会生成两个单独的块：
+
+- `main.js` chunk - webpack 将其分类为块 `initial` - 包括 `main.js` 和 `./my-function.js` 模块；
+- `async` 块，仅 `form-validation.js` 包含（如果已配置，则在资源名称中包含[文件哈希](https://bundlers.tooling.report/hashing/)）。仅当 `condition` 真实时才下载此[块](https://developer.mozilla.org/docs/Glossary/Truthy);
+
+通过此配置，可以推迟加载区块， `form-validation.js` 直到实际需要它;
+
+这可以通过减少初始页面加载期间[的脚本解析](https://web.dev/articles/script-evaluation-and-long-tasks)时间来提高加载响应能力;
+
+当满足指定条件时，将进行 `form-validation.js` 块的脚本下载和解析，在这种情况下，将下载动态导入的模块;
+
+一个示例可能是以下情况：仅为特定浏览器下载 polyfill，或者（如前面的示例中）导入的模块对于用户交互是必需的;
 
 ### 懒加载图片和 iframe 元素
 
