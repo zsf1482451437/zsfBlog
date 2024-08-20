@@ -1393,9 +1393,50 @@ if (condition) {
 
 一个示例可能是以下情况：仅为特定浏览器下载 polyfill，或者（如前面的示例中）导入的模块对于用户交互是必需的;
 
+另一方面，改变 `SplitChunksPlugin` 指定的配置 `chunks: initial` 确保代码仅在**初始块**上分割；
+
+这些是静态导入的块，或者 webpack 中列出的块 `entry` [属性](https://webpack.js.org/concepts/entry-points/)。查看前面的示例，生成的块将是以下内容的组合 `form-validation.js` *和* `main.js` 在单个脚本文件中，可能会导致初始页面加载性能更差；
+
+选项为 `SplitChunksPlugin` 还可以配置为将较大的脚本分成多个较小的脚本 - 例如通过使用[ `maxSize` ](https://webpack.js.org/plugins/split-chunks-plugin/#splitchunksmaxsize)选项指示 webpack 将块分割成单独的文件（如果它们超出了指定的范围） `maxSize` ；
+
+[将大型脚本文件划分为较小的文件可以提高负载响应能力](https://web.dev/articles/script-evaluation-and-long-tasks#loading_scripts_with_the_script_element)，因为在某些情况下，CPU 密集型脚本评估工作被划分为**较小的任务**，这些任务不太可能长时间阻塞主线程；
+
+此外，生成较大的 JavaScript 文件还意味着脚本更有可能遭受**缓存失效**的影响；
+
+例如，如果发布一个包含框架和第一方应用程序代码的**非常大**的脚本，则如果仅更新框架而捆绑资源中没有其他内容，则整个**捆绑包**可能会失效；
+
+另一方面，较小的脚本文件增加了回访者从缓存中检索资源的可能性，从而导致**重复访问**时页面加载速度更快；
+
+然而，较小的文件比较大的文件从压缩中受益较少，并且可能会增加未启动的浏览器缓存的页面加载的网络往返时间；
+
+必须注意在**缓存效率**、**压缩有效性**和**脚本评估时间**之间取得平衡。
+
+> 注意
+
+如果禁用 `SplitChunksPlugin` 通过指定 `splitChunks: false` 在应用程序的 webpack 配置中，然后 `./my-function.js` *两者*都捆绑在一起 `main.js` 和 `form-validation.js` 。
+
+体验仓库：https://github.com/kevinfarrugia/learn-performance-webpack-code-splitting/
+
+
+
 ### 懒加载图片和 iframe 元素
 
-image 和`<iframe>`元素会消耗大量的带宽和 CPU 处理时间。但是，并不是所有的图像和`<iframe>`元素都需要在初始页面加载期间加载，可以推迟到用户最有可能看到它们的时候。这种技术被称为惰性加载。在本模块中，解释了延迟加载图像和`<iframe>`元素，以便可以更快地加载页面，并且仅在需要时才消耗带宽和处理时间。
+图像和 `<iframe>` 元素通常比其他类型的资源消耗更多的带宽；
+
+如果是 `<iframe>` 元素，加载和渲染其中的页面可能需要相当多的额外处理时间；
+
+在延迟加载图像的情况下，**延迟加载**初始视口之外的图像有助于减少初始视口内更关键资源的带宽争用，
+
+在某些网络连接较差的情况下，这可以改善页面的[最大内容绘制 (LCP)](https://web.dev/articles/lcp) ，并且重新分配的带宽可以帮助[LCP 候选者](https://web.dev/articles/lcp#what-elements-are-considered)更快地加载和绘制；
+
+`<iframe>` 就元素而言，可以通过延迟加载在启动期间改进页面[与下一个绘制的交互（INP）](https://web.dev/articles/inp) ；
+
+这是因为一个 `<iframe>` 是一个**完全独立**的 HTML 文档，有自己的**子资源**，尽管 `<iframe>` 元素可以在单独的进程中运行，它们与其他线程共享进程的情况并不罕见，这可能会导致页面对用户输入的响应速度降低；
+
+#### img的loading
+
+- `"eager"` 通知浏览器应该立即加载图像，即使它位于初始视口之外。这也是默认值 `loading` 属性；
+- `"lazy"` 推迟加载图像，直到它距可见视口设定的距离内。此距离**因浏览器而异**，但通常设置得足够大，以便在用户滚动到图像时加载图像；
 
 ### prefetch&prerender&service worker
 
