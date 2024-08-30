@@ -1452,7 +1452,215 @@ if (condition) {
 
 对于可能是**LCP候选者**的图像来说，这一点尤为重要；
 
+取来4张图片：
 
+> html
+
+```html
+<div class="placeholder"></div>
+<!-- 占位符内容 -->
+<div class="grid">
+  <img
+    alt="Photograph of a sandy landscape."
+    width="800"
+    height="600"
+    src="./images/image-1.jpg"
+  />
+  <img
+    alt="Photograph of a table and chairs in the foreground with the sea in the background."
+    width="800"
+    height="600"
+    src="./images/image-2.jpg"
+  />
+  <img
+    alt="Photograph of a blue shallow sea with four deckchairs and an umbrella in the foreground on the rocks."
+    width="800"
+    height="600"
+    src="./images/image-3.jpg"
+    loading="lazy"
+  />
+  <img
+    alt="Aerial photograph of a green body of water surrounded by rocks."
+    width="800"
+    height="600"
+    src="./images/image-4.jpg"
+    loading="lazy"
+  />
+</div>
+```
+
+> css
+
+```css
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+}
+.placeholder {
+  height: 900px; /* 占位符高度，确保图片在初始加载时在视口外 */
+  background-color: #f0f0f0;
+}
+```
+
+其中前2个图像位于**视口内或靠近视口**，而其余2个图像位于视口外，视口之外的图像具有`loading="lazy"`属性；
+
+观察“网络”选项卡，你会发现到具有`loading="lazy"`属性的图像不会立即请求，而是向下滚动并接近视口时开始下载；
+
+如果去掉`.placeholder`,就没有懒加载的效果，立即请求，这是浏览器的优化手段，会**提前进行懒加载**，而不是等图片滚动到视口，以免对用户不友好；
+
+#### iframe的loading
+
+```html
+<div class="grid">
+  <iframe
+    title="Inline Frame Example"
+    width="400"
+    height="400"
+    src="https://example.org"
+    class="iframe"
+  >
+  </iframe>
+  <div class="placeholder"></div>
+  <iframe
+    title="Inline Frame Example"
+    width="400"
+    height="400"
+    src="https://example.org"
+    class="iframe"
+    loading="lazy"
+  >
+  </iframe>
+</div>
+```
+
+```css
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8rem;
+  }
+  .iframe {
+    width: 100%;
+  }
+  .placeholder {
+    height: 3000px; /* 占位符高度，确保图片在初始加载时在视口外 */
+    background-color: #f0f0f0;
+  }
+```
+
+测试的时候，使用live server打开（http协议），如果使用浏览器打开，使用的是**file协议**，会看不到懒加载的效果；
+
+#### facade 
+
+- 美: [fəˈsɑd]
+- 英: [fəˈsɑːd]
+
+> 一种延迟加载第三方资源方案
+
+常见例子：第三方服务的视频嵌入;
+
+其中除了**视频内容本身**之外，嵌入还可能涉及加载许多额外且可能昂贵的**子资源**（例如 JavaScript），在这种情况下，除非确实需要自动播放视频，否则视频嵌入要求用户在播放之前通过单击播放按钮与其进行交互；
+
+**交互过程**
+
+1. 加载时：向页面添加 Facade。
+2. 鼠标悬停时：Facade 会预先连接到第三方资源。
+3. 点击时：Facade 会自行替换为第三方产品。
+
+一般来说，
+
+- 视频嵌入
+- 社媒分享
+- 实时聊天
+
+都可以采用 Facade 模式；
+
+> tips
+
+选择 Facade 时，考虑大小和功能集之间的平衡。也可以使用延迟 iframe 加载器，例如 [vb/lazyframe](https://github.com/vb/lazyframe)。
+
+**YouTube 嵌入式播放器**
+
+- [paulirish/lite-youtube-embed](https://github.com/paulirish/lite-youtube-embed)
+- [Justinribeiro/lite-youtube](https://github.com/justinribeiro/lite-youtube)
+- [Daugilas/lazyYT](https://github.com/Daugilas/lazyYT)
+- [ngx-lite-video](https://github.com/karim-mamdouh/ngx-lite-video)
+
+**Vimeo 嵌入式播放器**
+
+- [luwes/lite-vimeo-embed](https://github.com/luwes/lite-vimeo-embed)
+- [slightlyoff/lite-vimeo](https://github.com/slightlyoff/lite-vimeo)
+- [ngx-lite-video](https://github.com/karim-mamdouh/ngx-lite-video)
+
+**实时聊天（Intercom、Drift、Help Scout、Facebook Messenger）**
+
+- [calibreapp/react-live-chat-loader](https://github.com/calibreapp/react-live-chat-loader)（[文章](https://calibreapp.com/blog/fast-live-chat)）
+
+> 示例
+
+**默认嵌入YouTube视频：**
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <iframe
+      width="560"
+      height="315"
+      src="https://www.youtube.com/embed/ogfYd705cRs"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+  </body>
+</html>
+
+```
+
+控制台查看网络选项：
+
+![image-20240830113557815](D:\workspace\zsfBlog\my-blog\docs\前端\img\image-20240830113557815.png)
+
+**使用paulirish/lite-youtube-embed嵌入：**
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <!-- Include the CSS & JS.. (This could be direct from the package or bundled) -->
+    <link
+      rel="stylesheet"
+      href="../node_modules/lite-youtube-embed/src/lite-yt-embed.css"
+    />
+
+    <script src="../node_modules/lite-youtube-embed/src/lite-yt-embed.js"></script>
+  </head>
+  <body>
+    <lite-youtube
+      videoid="ogfYd705cRs"
+      playlabel="Play: Keynote (Google I/O '18)"
+    ></lite-youtube>
+  </body>
+</html>
+
+```
+
+控制台查看网络选项：
+
+![image-20240830113951429](D:\workspace\zsfBlog\my-blog\docs\前端\img\image-20240830113951429.png)
+
+> 参考
+
+https://developer.chrome.com/docs/lighthouse/performance/third-party-facades?hl=zh-cn
 
 ### prefetch&prerender&service worker
 
