@@ -659,7 +659,7 @@ DNS 查找相当便宜，并且由于其成本相对较低，因此在某些情�
   height="500"
   src="/image-500.jpg"
   srcset="/image-500.jpg 1x, /image-1000.jpg 2x, /image-1500.jpg 3x"
->
+/>
 ```
 
 前面的 HTML 代码段使用像素密度描述符来提示浏览器在 DPR 为 1 的设备、 `image-1000.jpg` DPR 为 2 的设备以及 `image-1500.jpg` DPR 为 3 的设备上使用 `image-500.png` ;
@@ -682,7 +682,7 @@ DNS 查找相当便宜，并且由于其成本相对较低，因此在某些情�
   src="/image-500.jpg"
   srcset="/image-500.jpg 500w, /image-1000.jpg 1000w, /image-1500.jpg 1500w"
   sizes="(min-width: 768px) 500px, 100vw"
->
+/>
 ```
 
 在前面的 HTML 代码段中，该 `srcset` 属性指定浏览器可以从中选择的候选图像列表，以逗号分隔；
@@ -756,14 +756,9 @@ AVIF 支持有损和无损压缩，测试显示，在某些情况下，与 JPEG 
 
 ```html
 <picture>
-  <source type="image/avif" srcset="image.avif">
-  <source type="image/webp" srcset="image.webp">
-  <img
-    alt="An image"
-    width="500"
-    height="500"
-    src="/image.jpg"
-  >
+  <source type="image/avif" srcset="image.avif" />
+  <source type="image/webp" srcset="image.webp" />
+  <img alt="An image" width="500" height="500" src="/image.jpg" />
 </picture>
 ```
 
@@ -787,13 +782,8 @@ AVIF 支持有损和无损压缩，测试显示，在某些情况下，与 JPEG 
     media="(min-resolution: 1.5x)"
     srcset="/image-1000.jpg 1000w, /image-1500.jpg 1500w"
     sizes="(min-width: 768px) 500px, 100vw"
-  >
-  <img
-    alt="An image"
-    width="500"
-    height="500"
-    src="/image-500.jpg"
-  >
+  />
+  <img alt="An image" width="500" height="500" src="/image-500.jpg" />
 </picture>
 ```
 
@@ -818,17 +808,12 @@ DPR 大于或等于 1.5 的任何设备都将使用第一个 `<source>` 元素,�
   <source
     media="(min-width: 560px)"
     srcset="/image-500.jpg, /image-1000.jpg 2x, /image-1500.jpg 3x"
-  >
+  />
   <source
     media="(max-width: 560px)"
     srcset="/image-500.jpg 1x, /image-1000.jpg 2x"
-  >
-  <img
-    alt="An image"
-    width="500"
-    height="500"
-    src="/image-500.jpg"
-  >
+  />
+  <img alt="An image" width="500" height="500" src="/image-500.jpg" />
 </picture>
 ```
 
@@ -842,18 +827,13 @@ DPR 为 1 的设备会下载 `image-500.jpg` 图像，包括大多数桌面用�
     media="(min-width: 560px) and (min-resolution: 1.5x)"
     srcset="/image-1000.jpg 1000w, /image-1500.jpg 1500w"
     sizes="(min-width: 768px) 500px, 100vw"
-  >
+  />
   <source
     media="(max-width: 560px) and (min-resolution: 1.5x)"
     srcset="/image-1000-sm.jpg 1000w, /image-1500-sm.jpg 1500w"
     sizes="(min-width: 768px) 500px, 100vw"
-  >
-  <img
-    alt="An image"
-    width="500"
-    height="500"
-    src="/image-500.jpg"
-  >
+  />
+  <img alt="An image" width="500" height="500" src="/image-500.jpg" />
 </picture>
 ```
 
@@ -897,14 +877,14 @@ DPR 为 1 的设备会下载 `image-500.jpg` 图像，包括大多数桌面用�
 
 ```js
 if (request.headers.accept) {
-  if (request.headers.accept.includes('image/avif')) {
-    return reply.from('image.avif');
-  } else if (request.headers.accept.includes('image/webp')) {
-    return reply.from('image.webp');
+  if (request.headers.accept.includes("image/avif")) {
+    return reply.from("image.avif");
+  } else if (request.headers.accept.includes("image/webp")) {
+    return reply.from("image.webp");
   }
 }
 
-return reply.from('image.jpg');
+return reply.from("image.jpg");
 ```
 
 > 重要提示： `Accept` 请求标头通常仅传达 HTML 资源请求中支持的图像类型。如果选择根据此标头的值提供资源，请务必在附加 `Vary` 响应标头中指定它，以便共享缓存（如内容分发网络 （CDN））可以考虑同一 URL 的不同响应。
@@ -931,7 +911,7 @@ return reply.from('image.jpg');
 
 当图像出现在视口中时，可以使用该 `loading` 属性告诉浏览器延迟加载图像；
 
-属性值  `lazy` 告诉浏览器在图像位于（或靠近）视口之前不要下载图像；
+属性值 `lazy` 告诉浏览器在图像位于（或靠近）视口之前不要下载图像；
 
 这样可以节省带宽，使浏览器能够优先处理视口中已有的关键内容所需的资源；
 
@@ -991,8 +971,8 @@ ffmpeg -i input.mov -an output.webm
 
 ```html
 <video>
-  <source src="video.webm" type="video/webm">
-  <source src="video.mp4" type="video/mp4">
+  <source src="video.webm" type="video/webm" />
+  <source src="video.mp4" type="video/mp4" />
 </video>
 ```
 
@@ -1008,8 +988,8 @@ WebM 版本可以使用较新的 AV1 编解码器（尚未得到广泛支持）�
 
 ```html
 <video poster="poster.jpg">
-  <source src="video.webm" type="video/webm">
-  <source src="video.mp4" type="video/mp4">
+  <source src="video.webm" type="video/webm" />
+  <source src="video.mp4" type="video/mp4" />
 </video>
 ```
 
@@ -1019,7 +999,7 @@ WebM 版本可以使用较新的 AV1 编解码器（尚未得到广泛支持）�
 
 根据 HTTP 存档，网络上 20% 的视频都包含该 `autoplay` 属性;
 
- `autoplay` 在必须立即播放视频时使用，例如用作视频背景或替代动画 GIF 时;
+`autoplay` 在必须立即播放视频时使用，例如用作视频背景或替代动画 GIF 时;
 
 动画 GIF 可能非常大，尤其是当它们有许多具有**复杂细节**的帧时;
 
@@ -1031,8 +1011,8 @@ WebM 版本可以使用较新的 AV1 编解码器（尚未得到广泛支持）�
 
 ```html
 <video autoplay muted loop playsinline>
-  <source src="video.webm" type="video/webm">
-  <source src="video.mp4" type="video/mp4">
+  <source src="video.webm" type="video/webm" />
+  <source src="video.mp4" type="video/mp4" />
 </video>
 ```
 
@@ -1068,7 +1048,7 @@ WebM 版本可以使用较新的 AV1 编解码器（尚未得到广泛支持）�
 这为用户提供了一些关于视频内容的背景信息, 此外，如果海报图像是 **LCP 元素**，则可以使用 `<link rel="preload">` 提示以及 `fetchpriority="high"` 以下内容来增加 `poster` 图像的优先级：
 
 ```html
-<link rel="preload" as="image" href="poster.jpg" fetchpriority="high">
+<link rel="preload" as="image" href="poster.jpg" fetchpriority="high" />
 ```
 
 > 注意：如果视频不是视口中最大的元素，则预加载 `poster` 图像可能会因带宽争用而延迟 LCP，否则可用带宽将分配给其他更关键的资源。
@@ -1130,7 +1110,12 @@ h1 {
 
 ```html
 <!-- The `crossorigin` attribute is required for fonts—even self-hosted ones, as fonts are considered CORS resources. -->
-<link rel="preload" as="font" href="/fonts/OpenSans-Regular-webfont.woff2" crossorigin>
+<link
+  rel="preload"
+  as="font"
+  href="/fonts/OpenSans-Regular-webfont.woff2"
+  crossorigin
+/>
 ```
 
 > 注意：应谨慎使用该 `preload` 指令。过度使用该 `preload` 指令可能会转移其他关键资源的带宽。如果过度使用， `preload` 指令可能会下载当前页面不需要的字体
@@ -1149,7 +1134,7 @@ h1 {
 
 Web 字体的数量、编码和文件大小会显著影响浏览器**下载**和**呈现** Web 字体的速度；
 
-##### 自托管web字体
+##### 自托管 web 字体
 
 Web 字体可以通过第三方服务（例如 [Google Fonts](https://fonts.google.com/)）提供，也可以在服务器上自托管；
 
@@ -1162,8 +1147,8 @@ Web 字体可以通过第三方服务（例如 [Google Fonts](https://fonts.goog
 通过使用 `preconnect` ，可以告诉浏览器比浏览器通常更早地打开与跨源的连接：
 
 ```html
-<link rel="preconnect" href="https://fonts.googleapis.com">  
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 ```
 
 前面的 HTML 代码段提示浏览器要建立与 `fonts.googleapis.com` 的连接以及与 [的 CORS](https://developer.mozilla.org/docs/Web/HTTP/CORS) 连接 `fonts.gstatic.com` ；
@@ -1184,7 +1169,7 @@ Web 字体可以通过第三方服务（例如 [Google Fonts](https://fonts.goog
 
 > **注意：**只有在需要支持旧版浏览器时，才可能需要使用其他格式（如 WOFF、EOT 和 TTF）。如果*不需要*支持旧版浏览器，则没有理由依赖 WOFF2 以外的 Web 字体格式。
 
-##### 子集web字体
+##### 子集 web 字体
 
 Web 字体通常包含各种不同的**字形**，这些[字形](https://en.wikipedia.org/wiki/Glyph)是表示不同语言中使用的各种字符所必需的；
 
@@ -1220,7 +1205,7 @@ Web 字体通常包含各种不同的**字形**，这些[字形](https://en.wiki
 
 ##### block
 
- `font-display` 缺省值为 `block` ，使用 `block` 时，浏览器将阻止使用指定 Web 字体的任何文本的呈现；
+`font-display` 缺省值为 `block` ，使用 `block` 时，浏览器将阻止使用指定 Web 字体的任何文本的呈现；
 
 不同的浏览器的行为略有不同。Chromium 和 Firefox 会阻止渲染最多 3 秒，然后再使用回退；
 
@@ -1260,19 +1245,19 @@ Safari 会无限期阻止，直到 Web 字体加载完毕；
 
 对此的一种**补救措施**是仅加载页面运行所需的 JavaScript，同时通过一种称为**代码拆分**的技术推迟其他 JavaScript 的加载;
 
-#### 减少启动期间js的解析和执行
+#### 减少启动期间 js 的解析和执行
 
 当 JavaScript 执行时间超过 2 秒时，[Lighthouse](https://developer.chrome.com/docs/lighthouse/overview/) 会发出警告[，当执行时间超过 3.5 秒时](https://developer.chrome.com/docs/lighthouse/performance/bootup-time/)，它会失败;
 
 在页面生命周期*的任何时候，*过多的 JavaScript 解析和执行都是一个潜在的问题;
 
-因为如果用户与页面交互的时间与负责处理和执行 JavaScript 的主线程任务运行的时刻**重合**，则有可能增加交互的[*输入延迟*](https://web.dev/articles/optimize-input-delay);
+因为如果用户与页面交互的时间与负责处理和执行 JavaScript 的主线程任务运行的时刻**重合**，则有可能增加交互的[_输入延迟_](https://web.dev/articles/optimize-input-delay);
 
 不仅如此，在初始页面加载期间，过多的 JavaScript 执行和解析尤其成问题，因为这是页面生命周期中用户很可能与页面交互的点；
 
 事实上，[总阻塞时间 （TBT）（](https://web.dev/articles/tbt)一种负载响应能力指标）与 [INP](https://web.dev/articles/inp) [高度相关](https://almanac.httparchive.org/en/2022/performance#inp-and-tbt)，这表明用户在**初始页面加载期间**尝试交互的倾向很高；
 
-**Lighthouse** 审计报告执行页面请求的每个 JavaScript 文件所花费的时间，它非常有用，因为它可以帮助准确识别哪些脚本可能是[*代码拆分*](https://web.dev/articles/reduce-javascript-payloads-with-code-splitting)的候选脚本；
+**Lighthouse** 审计报告执行页面请求的每个 JavaScript 文件所花费的时间，它非常有用，因为它可以帮助准确识别哪些脚本可能是[_代码拆分_](https://web.dev/articles/reduce-javascript-payloads-with-code-splitting)的候选脚本；
 
 然后，可以使用 Chrome DevTools 中的[覆盖率工具](https://developer.chrome.com/docs/devtools/coverage/)进一步确定在页面加载期间页面的哪些 JavaScript 部分未使用；
 
@@ -1292,13 +1277,17 @@ Safari 会无限期阻止，直到 Web 字体加载完毕；
 [Static `import` ](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/import)语句会立即导入模块，并要求先解析并执行**父模块**及其所有依赖项，然后才能运行；
 
 ```js
-document.querySelectorAll('#myForm input').addEventListener('blur', async () => {
-  // Get the form validation named export from the module through destructuring:
-  const { validateForm } = await import('/validate-form.mjs');
+document.querySelectorAll("#myForm input").addEventListener(
+  "blur",
+  async () => {
+    // Get the form validation named export from the module through destructuring:
+    const { validateForm } = await import("/validate-form.mjs");
 
-  // Validate the form:
-  validateForm();
-}, { once: true });
+    // Validate the form:
+    validateForm();
+  },
+  { once: true }
+);
 ```
 
 在前面的 JavaScript 代码段中，仅当用户[模糊](https://developer.mozilla.org/docs/Web/API/Element/blur_event)表单的任何 `<input>` 字段时，才会下载、解析和执行该 `validate-form.mjs` 模块;
@@ -1343,12 +1332,12 @@ document.querySelectorAll('#myForm input').addEventListener('blur', async () => 
 
 Chromium 的 V8 JavaScript 引擎提供了许多开箱即用的优化，以确保你的生产 JavaScript 代码尽可能高效地加载；
 
-其中一种优化被称为***流式编译***，它就像对流式传输到浏览器的 HTML 的**增量解析**一样，在流式传输的 JavaScript 块从网络到达时对其进行编译；
+其中一种优化被称为**_流式编译_**，它就像对流式传输到浏览器的 HTML 的**增量解析**一样，在流式传输的 JavaScript 块从网络到达时对其进行编译；
 
 可以通过以下几种方式确保在 Chromium 中对 Web 应用程序进行流式编译：
 
 - **转换生产代码。**打包器可以根据编译目标转换 JavaScript 源代码，而目标通常特定于给定的环境；V8 会将流式编译应用于任何**不使用模块**的 JavaScript 代码，可以配置打包器以将 JavaScript 模块代码转换为不使用 JavaScript 模块及其功能的语法；
-- **使用 `.mjs` 后缀。**就 V8 而言，使用扩展在生产环境中发布 JavaScript 模块时， 当你在生产环境中使用.js扩展名发布JavaScript模块时，你实际上选择了退出流编译。如果您将扩展 `.mjs` 用于 JavaScript 模块，V8 可以确保基于模块的 JavaScript 代码的流式编译**不会中断**。
+- **使用 `.mjs` 后缀。**就 V8 而言，使用扩展在生产环境中发布 JavaScript 模块时， 当你在生产环境中使用.js 扩展名发布 JavaScript 模块时，你实际上选择了退出流编译。如果您将扩展 `.mjs` 用于 JavaScript 模块，V8 可以确保基于模块的 JavaScript 代码的流式编译**不会中断**。
 
 不要让这些注意事项阻止使用代码拆分，代码拆分是减少用户初始 JavaScript 负载的有效方法，但通过使用打包器并了解如何保留 V8 的流式编译行为，可以确保生产 JavaScript 代码对用户来说尽可能快；
 
@@ -1360,23 +1349,22 @@ Chromium 的 V8 JavaScript 引擎提供了许多开箱即用的优化，以确�
 - `chunks: initial` 指静态 `import` 调用；
 - `chunks: all` 涵盖动态 `import()` 和静态导入，在`async` 和 `initial` IMPORT 之间共享块；
 
-
 默认情况下，每当 webpack 遇到 dynamic `import()` 语句时。它为该模块创建一个单独的块：
 
 ```js
 /* main.js */
 
 // An application-specific chunk required during the initial page load:
-import myFunction from './my-function.js';
+import myFunction from "./my-function.js";
 
-myFunction('Hello world!');
+myFunction("Hello world!");
 
 // If a specific condition is met, a separate chunk is downloaded on demand,
 // rather than being bundled with the initial chunk:
 if (condition) {
   // Assumes top-level await is available. More info:
   // https://v8.dev/features/top-level-await
-  await import('/form-validation.js');
+  await import("/form-validation.js");
 }
 ```
 
@@ -1395,7 +1383,7 @@ if (condition) {
 
 另一方面，改变 `SplitChunksPlugin` 指定的配置 `chunks: initial` 确保代码仅在**初始块**上分割；
 
-这些是静态导入的块，或者 webpack 中列出的块 `entry` [属性](https://webpack.js.org/concepts/entry-points/)。查看前面的示例，生成的块将是以下内容的组合 `form-validation.js` *和* `main.js` 在单个脚本文件中，可能会导致初始页面加载性能更差；
+这些是静态导入的块，或者 webpack 中列出的块 `entry` [属性](https://webpack.js.org/concepts/entry-points/)。查看前面的示例，生成的块将是以下内容的组合 `form-validation.js` _和_ `main.js` 在单个脚本文件中，可能会导致初始页面加载性能更差；
 
 选项为 `SplitChunksPlugin` 还可以配置为将较大的脚本分成多个较小的脚本 - 例如通过使用[ `maxSize` ](https://webpack.js.org/plugins/split-chunks-plugin/#splitchunksmaxsize)选项指示 webpack 将块分割成单独的文件（如果它们超出了指定的范围） `maxSize` ；
 
@@ -1417,8 +1405,6 @@ if (condition) {
 
 体验仓库：https://github.com/kevinfarrugia/learn-performance-webpack-code-splitting/
 
-
-
 ### 懒加载图片和 iframe 元素
 
 图像和 `<iframe>` 元素通常比其他类型的资源消耗更多的带宽；
@@ -1433,7 +1419,7 @@ if (condition) {
 
 这是因为一个 `<iframe>` 是一个**完全独立**的 HTML 文档，有自己的**子资源**，尽管 `<iframe>` 元素可以在单独的进程中运行，它们与其他线程共享进程的情况并不罕见，这可能会导致页面对用户输入的响应速度降低；
 
-#### img的loading
+#### img 的 loading
 
 - `"eager"` 通知浏览器应该立即加载图像，即使它位于初始视口之外。这也是默认值 `loading` 属性；
 - `"lazy"` 推迟加载图像，直到它距可见视口设定的距离内。此距离**因浏览器而异**，但通常设置得足够大，以便在用户滚动到图像时加载图像；
@@ -1448,11 +1434,11 @@ if (condition) {
 
 然而，在某些情况下，很明显应该避免应用`loading="lazy"`；
 
-例如，在其他图像用例中，<img>元素可能出现在折叠上方，或者在任何设备上**接近布局顶部**的情况下，你应该绝对忽略<img>元素的`loading="lazy"`属性；
+例如，在其他图像用例中，img 元素可能出现在折叠上方，或者在任何设备上**接近布局顶部**的情况下，你应该绝对忽略 img 元素的`loading="lazy"`属性；
 
-对于可能是**LCP候选者**的图像来说，这一点尤为重要；
+对于可能是**LCP 候选者**的图像来说，这一点尤为重要；
 
-取来4张图片：
+取来 4 张图片：
 
 > html
 
@@ -1503,13 +1489,13 @@ if (condition) {
 }
 ```
 
-其中前2个图像位于**视口内或靠近视口**，而其余2个图像位于视口外，视口之外的图像具有`loading="lazy"`属性；
+其中前 2 个图像位于**视口内或靠近视口**，而其余 2 个图像位于视口外，视口之外的图像具有`loading="lazy"`属性；
 
 观察“网络”选项卡，你会发现到具有`loading="lazy"`属性的图像不会立即请求，而是向下滚动并接近视口时开始下载；
 
 如果去掉`.placeholder`,就没有懒加载的效果，立即请求，这是浏览器的优化手段，会**提前进行懒加载**，而不是等图片滚动到视口，以免对用户不友好；
 
-#### iframe的loading
+#### iframe 的 loading
 
 ```html
 <div class="grid">
@@ -1536,22 +1522,22 @@ if (condition) {
 
 ```css
 .grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8rem;
-  }
-  .iframe {
-    width: 100%;
-  }
-  .placeholder {
-    height: 3000px; /* 占位符高度，确保图片在初始加载时在视口外 */
-    background-color: #f0f0f0;
-  }
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8rem;
+}
+.iframe {
+  width: 100%;
+}
+.placeholder {
+  height: 3000px; /* 占位符高度，确保图片在初始加载时在视口外 */
+  background-color: #f0f0f0;
+}
 ```
 
-测试的时候，使用live server打开（http协议），如果使用浏览器打开，使用的是**file协议**，会看不到懒加载的效果；
+测试的时候，使用 live server 打开（http 协议），如果使用浏览器打开，使用的是**file 协议**，会看不到懒加载的效果；
 
-#### facade 
+#### facade
 
 - 美: [fəˈsɑd]
 - 英: [fəˈsɑːd]
@@ -1599,7 +1585,7 @@ if (condition) {
 
 > 示例
 
-**默认嵌入YouTube视频：**
+**默认嵌入 YouTube 视频：**
 
 ```html
 <!DOCTYPE html>
@@ -1620,14 +1606,13 @@ if (condition) {
     ></iframe>
   </body>
 </html>
-
 ```
 
 控制台查看网络选项：
 
-![image-20240830113557815](D:\workspace\zsfBlog\my-blog\docs\前端\img\image-20240830113557815.png)
+![image-20240830113557815](./img/image-20240830113557815.png)
 
-**使用paulirish/lite-youtube-embed嵌入：**
+**使用 paulirish/lite-youtube-embed 嵌入：**
 
 ```html
 <!DOCTYPE html>
@@ -1651,12 +1636,11 @@ if (condition) {
     ></lite-youtube>
   </body>
 </html>
-
 ```
 
 控制台查看网络选项：
 
-![image-20240830113951429](D:\workspace\zsfBlog\my-blog\docs\前端\img\image-20240830113951429.png)
+![image-20240830113951429](./img/image-20240830113951429.png)
 
 > 参考
 
