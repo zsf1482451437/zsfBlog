@@ -1405,7 +1405,7 @@ if (condition) {
 
 体验仓库：https://github.com/kevinfarrugia/learn-performance-webpack-code-splitting/
 
-### 懒加载图片和 iframe 元素
+### 懒加载
 
 图像和 `<iframe>` 元素通常比其他类型的资源消耗更多的带宽；
 
@@ -1646,9 +1646,112 @@ if (condition) {
 
 https://developer.chrome.com/docs/lighthouse/performance/third-party-facades?hl=zh-cn
 
-### prefetch&prerender&service worker
+#### js懒加载库
 
-尽管大部分绩效都涉及可以采取的优化和消除不必要的资源，但建议在需要之前加载某些资源似乎有些自相矛盾。但是，在某些情况下，提前加载某些资源可能是适当的。在此模块中，讨论了预摘要，预处理和服务工作者的探索性能的这一方面。
+video 元素、video元素 poster 图片， 由 CSS background-image 属性加载的图片，浏览器不支持它们的懒加载，这时可以使用基于 JavaScript 的延迟加载解决方案：
+
+- [lazysizes](https://github.com/aFarkas/lazysizes) 
+- [yall.js](https://github.com/malchata/yall.js)
+
+在没有音轨的情况下自动播放和循环播放 `<video>` 元素 是[比使用动画 GIF 更高效](https://web.dev/articles/replace-gifs-with-videos?hl=zh-cn)的替代方案，通常比具有同等图像的视频资源大几倍 质量；
+
+这些库中的大多数都使用[Intersection Observer API](https://developer.mozilla.org/docs/Web/API/Intersection_Observer_API) （如果页面的 HTML 在初始加载后发生更改，则还[使用 Mutation Observer API](https://developer.mozilla.org/docs/Web/API/MutationObserver) ）来识别元素何时进入用户的视口；
+
+如果图像可见（或接近视口），则 JavaScript 库会将非标准属性（通常是`data-src`或类似属性）替换为正确的属性，例如`src` ；
+
+> 使用yall.js示例
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/yall-js@3.2.0/dist/yall.min.js"></script>
+  </head>
+  <style>
+    .placeholder {
+      height: 1000px;
+      background-color: #413636;
+    }
+  </style>
+  <body>
+    <div class="placeholder"></div>
+    <video
+      class="lazy"
+      autoplay
+      loop
+      muted
+      playsinline
+      width="320"
+      height="480"
+    >
+      <source data-src="./video.webm" type="video/webm" />
+      <source data-src="./video.mp4" type="video/mp4" />
+    </video>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        yall();
+      });
+    </script>
+  </body>
+</html>
+
+```
+
+默认情况下，yall.js 会观察所有具有`"lazy"`类的 HTML 元素;
+
+一旦 yall.js 在页面上加载并执行，视频就不会加载，直到用户将其滚动到视口中;
+
+此时， `video`元素的子`source`元素上的`data-src`属性将交换为`src`属性，这会发送下载视频并自动开始播放的请求;
+
+
+
+### prefetch
+
+**预获取资源**可以提高用户体验，因为用户不需要等待资源被获取；
+
+预获取资源会被分配**最低网络优先级**，prefetch告知浏览器，当空闲下来才请求，以避免与当前页面所需的关键资源发生**争用**；
+
+当最终需要时，将从*预取缓存*（**磁盘**）中获取它们；
+
+预获取资源常见例子：预获取表单相关资源
+
+> 示例
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="prefetch" href="./style.css" as="style" />
+    <link rel="prefetch" href="./script.js" as="script" />
+    <link rel="prefetch" href="./image.png" />
+  </head>
+  <body>
+    <h1>Resource Loading Priority Example</h1>
+    <input type="text" />
+  </body>
+</html>
+
+```
+
+控制台-网络选项卡
+
+你会在优先级一栏发现，这三资源的优先级最低
+
+![image-20240903113232870](D:\workspace\zsfBlog\my-blog\docs\前端\img\image-20240903113232870.png)
+
+> 注意
+
+[除了 Safari 之外，所有现代浏览器都支持`prefetch`](https://caniuse.com/link-rel-prefetch) ；
+
+如果需要兼容所有浏览器（并且正在使用 Service Worker），[使用 Service Worker 预缓存资源](https://web.dev/learn/performance/prefetching-prerendering-precaching#service_worker_precaching)；
+
+### &prerender&service worker
 
 ### web worker
 
