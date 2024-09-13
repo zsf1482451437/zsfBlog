@@ -2,6 +2,18 @@
 description: 强大、高效、异步的服务器端语言
 ---
 
+# npm
+
+## config
+
+查看某一个配置：`npm config get proxy`(http代理)、`npm config get https-proxy`(https代理)；
+
+修改某个配置：`npm config set proxy xxx`,其他同理；
+
+查看所有配置：`npm config list`, `npm config ls -l`展示更详细；
+
+删除某个配置：`npm config delete proxy`,其他同理；
+
 # Node
 
 ## 常见命令
@@ -681,3 +693,16 @@ npm ERR! gyp ERR! node -v v18.20.2
 npm ERR! gyp ERR! node-gyp -v v7.1.0
 npm ERR! gyp ERR! not ok
 ```
+
+# 实现用户管理系统
+
+> 技术选型
+
+- koa
+- mysql
+
+> 必要的包
+
+- koa
+- mysql2
+- body-parser
