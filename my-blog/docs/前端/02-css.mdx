@@ -1452,6 +1452,78 @@ outer {
 
 **是 flex-grow || flex-shrink || flex-basis 的简写**
 
+## 网格布局
+
+### 容器
+
+元素上声明 `display：grid` 或 `display：inline-grid` 来创建一个*网格容器*；
+
+这个元素的**所有直系子元素**将成为*网格项目*；
+
+### 网格轨道
+
+网格上任意**两条相邻线**之间的空间；
+
+可以使用 [`grid-template-rows`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/grid-template-rows) 和 [`grid-template-columns`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/grid-template-columns) 属性定义网格上的行和列，这些属性定义了网格轨道
+
+> 基本示例
+
+```html
+<div class="wrapper">
+  <div>一</div>
+  <div>二</div>
+  <div>三</div>
+  <div>四</div>
+  <div>五</div>
+</div>
+```
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 200px 200px 200px;
+}
+```
+
+![image-20240924150641745](D:\workspace\zsfBlog\my-blog\docs\前端\img\image-20240924150641745.png)
+
+三个200px的轨道
+
+### fr单位
+
+代表网格容器中**可用空间**的x等分；
+
+比如三等分可以这样写：
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;// 也可以写成 repeat(3, 1fr);
+}
+```
+
+![image-20240924151041114](D:\workspace\zsfBlog\my-blog\docs\前端\img\image-20240924151041114.png)
+
+repeat表示**重复模式**，上面表示以一个轨道1fr的模式，重复3次；
+
+它还支持传入轨道列表；
+
+```css
+grid-template-columns: repeat(5, 1fr 2fr);
+```
+
+这个则表示，共10个轨道，一个1fr轨道后面跟一个2fr轨道的模式，重复5次；
+
+### 轨道高度
+
+
+
+
+
+
+
+
+
 ## 移动端适配
 
 ### 视口
