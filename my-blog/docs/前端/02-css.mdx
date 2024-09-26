@@ -1516,13 +1516,51 @@ grid-template-columns: repeat(5, 1fr 2fr);
 
 ### 轨道高度
 
+默认情况下，轨道会自动调整大小，取决于轨道内的内容；
+
+`grid-auto-rows` 可以指定轨道高度
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 200px;
+}
+```
+
+![image-20240925085745293](D:\workspace\zsfBlog\my-blog\docs\前端\img\image-20240925085745293.png)
+
+### 弹性和绝对宽度
 
 
 
+### minmax
 
+创建的行高度最小为 100 像素，最大为 `auto`，将取决于内容的大小；
 
+```html
+<div class="wrapper">
+  <div>一</div>
+  <div>
+    二
+    <p>这里有更多内容。</p>
+    <p>使得这里高于 100 像素。</p>
+  </div>
+  <div>三</div>
+  <div>四</div>
+  <div>五</div>
+</div>
+```
 
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(100px, auto);
+}
+```
 
+![image-20240925091405544](D:\workspace\zsfBlog\my-blog\docs\前端\img\image-20240925091405544.png)
 
 ## 移动端适配
 
