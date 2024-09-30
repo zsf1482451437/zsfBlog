@@ -715,3 +715,128 @@ npm ERR! gyp ERR! not ok
 安装必要的包
 
 `npm install koa mysql2 body-parser`
+
+待掌握清单
+
+```bash
+1. Node.js 基础
+Node.js 环境
+什么是Node.js？
+如何安装和配置Node.js？
+模块系统
+如何使用require和module.exports？
+什么是CommonJS模块？
+2. Koa 框架
+Koa 基础
+什么是Koa？
+如何创建一个Koa应用？
+中间件
+什么是中间件？
+如何使用中间件处理请求和响应？
+路由
+如何定义和使用路由？
+如何处理不同的HTTP方法（GET, POST, PUT, DELETE）？
+3. 测试框架
+Jest
+什么是Jest？
+如何安装和配置Jest？
+如何编写和运行测试？
+Supertest
+什么是Supertest？
+如何使用Supertest测试HTTP请求？
+4. 单元测试
+测试用例
+什么是测试用例？
+如何编写有效的测试用例？
+模拟（Mocking）
+什么是模拟？
+如何使用jest.mock模拟模块和函数？
+参数化测试
+什么是参数化测试？
+如何编写参数化测试？
+5. 异步编程
+异步函数
+什么是异步函数？
+如何使用async和await？
+错误处理
+如何在异步函数中处理错误？
+问题驱动理解
+1. Node.js 基础
+Node.js 环境
+
+什么是Node.js？
+Node.js是一个基于Chrome V8引擎的JavaScript运行时，用于构建快速、可扩展的网络应用。
+如何安装和配置Node.js？
+你可以从Node.js官方网站下载并安装Node.js。安装后，可以使用node -v和npm -v命令检查版本。
+模块系统
+
+如何使用require和module.exports？
+require用于引入模块，module.exports用于导出模块中的内容。
+什么是CommonJS模块？
+CommonJS是Node.js使用的模块系统，允许你在文件中定义模块并在其他文件中使用。
+2. Koa 框架
+Koa 基础
+
+什么是Koa？
+Koa是一个新的Web框架，由Express的原始团队设计，旨在成为一个更小、更富表现力、更健壮的基础。
+如何创建一个Koa应用？
+使用const Koa = require('koa'); const app = new Koa();创建一个Koa应用。
+中间件
+
+什么是中间件？
+中间件是Koa应用中用于处理请求和响应的函数。
+如何使用中间件处理请求和响应？
+使用app.use方法添加中间件，例如app.use(async (ctx, next) => { await next(); });。
+路由
+
+如何定义和使用路由？
+使用koa-router定义路由，例如router.get('/path', async (ctx) => { ctx.body = 'Hello World'; });。
+如何处理不同的HTTP方法（GET, POST, PUT, DELETE）？
+使用router.get、router.post、router.put、router.delete等方法定义不同的HTTP方法路由。
+3. 测试框架
+Jest
+
+什么是Jest？
+Jest是一个用于JavaScript的开源测试框架，提供了简单的API和强大的功能。
+如何安装和配置Jest？
+使用npm install --save-dev jest安装Jest，并在package.json中添加测试脚本。
+如何编写和运行测试？
+使用describe、it和expect方法编写测试，并使用npm test运行测试。
+Supertest
+
+什么是Supertest？
+Supertest是一个用于测试HTTP请求的库，通常与Jest一起使用。
+如何使用Supertest测试HTTP请求？
+使用request(app.callback()).post('/path').send(data)发送HTTP请求，并使用expect方法验证响应。
+4. 单元测试
+测试用例
+
+什么是测试用例？
+测试用例是一个独立的测试，验证代码的特定功能。
+如何编写有效的测试用例？
+编写清晰、简洁的测试用例，覆盖代码的不同路径和边界情况。
+模拟（Mocking）
+
+什么是模拟？
+模拟是指在测试中替换实际的依赖，以便隔离测试目标。
+如何使用jest.mock模拟模块和函数？
+使用jest.mock('module')模拟模块，并使用mockImplementation方法定义模拟实现。
+参数化测试
+
+什么是参数化测试？
+参数化测试是指使用不同的输入数据多次运行同一个测试。
+如何编写参数化测试？
+使用数组存储不同的测试用例，并使用forEach方法遍历数组运行测试。
+5. 异步编程
+异步函数
+
+什么是异步函数？
+异步函数是使用async关键字定义的函数，允许使用await关键字等待异步操作完成。
+如何使用async和await？
+在异步函数中使用await等待Promise完成，例如const result = await someAsyncFunction();。
+错误处理
+
+如何在异步函数中处理错误？
+使用try...catch块捕获和处理异步函数中的错误。
+```
+
