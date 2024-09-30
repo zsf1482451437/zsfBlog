@@ -1532,7 +1532,14 @@ grid-template-columns: repeat(5, 1fr 2fr);
 
 ### 弹性和绝对宽度
 
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 500px 1fr 2fr;
+}
+```
 
+![](D:\workspace\zsfBlog\my-blog\docs\前端\img\Snipaste_2024-09-26_17-10-40.png)
 
 ### minmax
 
@@ -1561,6 +1568,23 @@ grid-template-columns: repeat(5, 1fr 2fr);
 ```
 
 ![image-20240925091405544](D:\workspace\zsfBlog\my-blog\docs\前端\img\image-20240925091405544.png)
+
+### 网格间距
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 10px;
+  row-gap: 1em;
+}
+```
+
+![](D:\workspace\zsfBlog\my-blog\docs\前端\img\Snipaste_2024-09-26_17-18-20.png)
+
+以上列与列之间创建了 10 像素的间隙，在行与行之间创建了 1em 的间隙
+
+> 现代浏览基本支持无前缀，如果不生效，可以加上grid前缀，如grid-row-gap
 
 ## 移动端适配
 
