@@ -1,0 +1,68 @@
+# webgl
+
+**Web Graphic Library**，页面图形库；
+
+借助`canvas`元素，使用JavaScript和[OpenGL ES](https://www.khronos.org/opengles/) 2.0 的 API，进行2D或3D图形渲染。
+
+WebGL 程序构成:
+
+- 控制代码（JavaScript）
+- 特效代码（在GPU中执行，shader code，着色代码）
+
+> GPU: Graphic Processing Unit,图形处理单元
+
+# 操作
+
+## 上下文环境
+
+如何设置 WebGL 上下文环境？
+
+```html
+<body onload="main()">
+  <canvas id="glcanvas" width="640" height="480">
+    你的浏览器似乎不支持或者禁用了 HTML5 <code>&lt;canvas&gt;</code> 元素。
+  </canvas>
+</body>
+<script>
+// 从这里开始
+function main() {
+  const canvas = document.querySelector("#glcanvas");
+  // 初始化 WebGL 上下文
+  const gl = canvas.getContext("webgl");
+
+  // 确认 WebGL 支持性
+  if (!gl) {
+    alert("无法初始化 WebGL，你的浏览器、操作系统或硬件等可能不支持 WebGL。");
+    return;
+  }
+
+  // 使用完全不透明的黑色清除所有图像
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  // 用上面指定的颜色清除缓冲区
+  gl.clear(gl.COLOR_BUFFER_BIT);
+}
+
+</script>
+```
+
+获取到 canvas 之后，调用[getContext](https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLCanvasElement/getContext) 函数并向它传递 `"webgl"` 参数，来尝试获取[WebGLRenderingContext](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext);
+
+如果浏览器不支持 webgl, `getContext` 将会返回 `null`，就可以显示一条消息给用户然后退出;
+
+如果 WebGL 上下文成功初始化，变量‘gl’会用来引用该上下文;
+
+在这个例子里，用黑色清除上下文内已有的元素。（用背景颜色重绘 canvas）;
+
+![image-20241008155038443](D:\workspace\zsfBlog\my-blog\docs\前端\img\image-20241008155038443.png)
+
+## 2D内容
+
+如何用 WebGl 渲染简单的平面化图形?
+
+### 渲染场景
+
+### 创建对象
+
+### 绘制场景
+
+### 矩阵通用计算
