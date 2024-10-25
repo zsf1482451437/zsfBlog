@@ -27,13 +27,13 @@ webgl在电脑的GPU中运行，因此需要能够在GPU上运行的代码；
 
 ## 顶点着色器
 
-作用是，计算顶点的**位置**；
+VertexShader，作用是，计算顶点的**位置**；
 
 根据计算出的一系列顶点位置，webgl可以对点，线和三角形在内的一些**图元**进行**光栅化**处理；
 
 ## 片段着色器
 
-对图元进行光栅化处理，需要使用片段着色器方法；
+fragmentShader，对图元进行光栅化处理，需要使用片段着色器方法；
 
 片段着色器的作用，计算出当前绘制图元中每个像素的**颜色值**；
 
@@ -81,6 +81,72 @@ webgl在电脑的GPU中运行，因此需要能够在GPU上运行的代码；
 是一种顶点着色器给片段着色器**传值**的方式；
 
 依照渲染的图元是点，线还是三角形，顶点着色器中设置的可变量，会在片段着色器运行中获取不同的**插值**；
+
+## 裁剪空间
+
+webgl只关心两件事：裁剪空间中的坐标值和颜色值；
+
+webgl只关心两件事：裁剪空间的**坐标值**和**颜色值**；
+
+**顶点着色器**提供坐标值，**片段着色器**提供颜色值；
+
+无论画布多大，，裁剪空间的**坐标范围**永远是-1到1；
+例子:
+
+从顶点着色器开始
+
+```js
+// 一个属性值，将会从缓冲中获取数据
+attribute vec4 a_position;
+ 
+// 所有着色器都有一个main方法
+void main() {
+ 
+  // gl_Position 是一个顶点着色器主要设置的变量
+  gl_Position = a_position;
+}
+```
+
+如果用js代替glsl，当它运行的时候，做了类似以下的事情：
+
+```js
+var positionBuffer = [
+  0, 0, 0, 0,
+  0, 0.5, 0, 0,
+  0.7, 0, 0, 0,
+];
+var attributes = {};
+var gl_Position;
+ 
+drawArrays(..., offset, count) {
+  var stride = 4;
+  var size = 4;
+  for (var i = 0; i < count; ++i) {
+     // 从positionBuffer复制接下来4个值给a_position属性
+     const start = offset + i * stride;
+     attributes.a_position = positionBuffer.slice(start, start + size);
+     runVertexShader();// 运行顶点着色器
+     ...
+     doSomethingWith_gl_Position();
+}
+```
+
+但实际情况没那么简单，因为**positionBuffer**将会被转换成二进制数据；
+
+接着看片段着色器：
+
+```js
+// 片段着色器没有默认精度，所以我们需要设置一个精度
+// mediump是一个不错的默认值，代表“medium precision”（中等精度）
+precision mediump float;
+ 
+void main() {
+  // gl_FragColor是一个片段着色器主要设置的变量
+  gl_FragColor = vec4(1, 0, 0.5, 1); // 返回“红紫色”
+}
+```
+
+
 
 # 操作
 
