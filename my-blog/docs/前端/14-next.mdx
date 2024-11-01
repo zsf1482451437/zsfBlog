@@ -5,6 +5,7 @@
 ## 常见类型
 
 - 不正确的元素嵌套
+- 服务端和客户端属性不匹配
 - 服务端渲染时使用浏览器API
 - 使用非确定性内容
 - 浏览器插件修改html
@@ -19,6 +20,20 @@
 - 交互式内容嵌套（a嵌套a，button嵌套button等等）
 
 解决方法：**避免这种元素结构**
+
+### 服务端和客户端属性不匹配
+
+场景：
+
+```html
+<p style={{ color: excessDays <= 3 && !isUsed ? '#E33618' : '' }}></p>
+```
+
+```
+Warning: Prop `style` did not match. Server: "null" Client: "color:"
+```
+
+
 
 ### 服务端渲染时使用浏览器API
 
