@@ -146,13 +146,15 @@ void main() {
 }
 ```
 
+## 案例
 
+1. 画布
+2. webgl渲染上下文
+3. 创建GLSL
+4. 创建着色器
+5. 着色程序
 
-# 操作
-
-## 上下文环境
-
-如何设置 WebGL 上下文环境？
+### 画布
 
 ```html
 <body onload="main()">
@@ -160,6 +162,11 @@ void main() {
     你的浏览器似乎不支持或者禁用了 HTML5 <code>&lt;canvas&gt;</code> 元素。
   </canvas>
 </body>
+```
+
+### webgl渲染上下文
+
+```html
 <script>
 // 从这里开始
 function main() {
@@ -172,34 +179,161 @@ function main() {
     alert("无法初始化 WebGL，你的浏览器、操作系统或硬件等可能不支持 WebGL。");
     return;
   }
-
-  // 使用完全不透明的黑色清除所有图像
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  // 用上面指定的颜色清除缓冲区
-  gl.clear(gl.COLOR_BUFFER_BIT);
+ ...
 }
 
 </script>
 ```
 
-获取到 canvas 之后，调用[getContext](https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLCanvasElement/getContext) 函数并向它传递 `"webgl"` 参数，来尝试获取[WebGLRenderingContext](https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext);
+### 创建GLSL
 
-如果浏览器不支持 webgl, `getContext` 将会返回 `null`，就可以显示一条消息给用户然后退出;
+- 串联方式，ajax下载，用多行模板数据；
+- 放在非JavaScript类型的标签中；
 
-如果 WebGL 上下文成功初始化，变量‘gl’会用来引用该上下文;
+事实上，大多数**三维引擎**在运行时利用模版，串联等方式创建GLSL；
 
-在这个例子里，用黑色清除上下文内已有的元素。（用背景颜色重绘 canvas）;
+```html
+<script id="vertex-shader-2d" type="notjs">
+ 
+  // 一个属性变量，将会从缓冲中获取数据
+  attribute vec4 a_position;
+ 
+  // 所有着色器都有一个main方法
+  void main() {
+ 
+    // gl_Position 是一个顶点着色器主要设置的变量
+    gl_Position = a_position;
+  }
+ 
+</script>
+ 
+<script id="fragment-shader-2d" type="notjs">
+ 
+  // 片段着色器没有默认精度，所以我们需要设置一个精度
+  // mediump是一个不错的默认值，代表“medium precision”（中等精度）
+  precision mediump float;
+ 
+  void main() {
+    // gl_FragColor是一个片段着色器主要设置的变量
+    gl_FragColor = vec4(1, 0, 0.5, 1); // 返回“瑞迪施紫色”
+  }
+ 
+</script>
+```
 
-![image-20241008155038443](D:\workspace\zsfBlog\my-blog\docs\前端\img\image-20241008155038443.png)
+### 创建着色器
 
-## 2D内容
+```js
+// 创建着色器方法，输入参数：渲染上下文，着色器类型，数据源
+function createShader(gl, type, source) {
+  var shader = gl.createShader(type); // 创建着色器对象
+  gl.shaderSource(shader, source); // 提供数据源
+  gl.compileShader(shader); // 编译 -> 生成着色器
+  var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+  if (success) {
+    return shader;
+  }
+ 
+  console.log(gl.getShaderInfoLog(shader));
+  gl.deleteShader(shader);
+}
+```
 
-如何用 WebGl 渲染简单的平面化图形?
+这个方法，只需要上传GLSL数据，然后编译成着色器；
 
-### 渲染场景
+用该方法创建两个着色器：
 
-### 创建对象
+```js
+var vertexShaderSource = document.querySelector("#vertex-shader-2d").text;
+var fragmentShaderSource = document.querySelector("#fragment-shader-2d").text;
+ 
+var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+```
 
-### 绘制场景
+### 着色程序
 
-### 矩阵通用计算
+需要将两个着色器link到一个program
+
+```js
+function createProgram(gl, vertexShader, fragmentShader) {
+  var program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  var success = gl.getProgramParameter(program, gl.LINK_STATUS);
+  if (success) {
+    return program;
+  }
+ 
+  console.log(gl.getProgramInfoLog(program));
+  gl.deleteProgram(program);
+}
+```
+
+已经在cpu上创建了一个glsl**着色程序**，还需要给它提供数据；
+
+webgl的主要任务是：设置好**状态**并为glsl着色程序提供**数据**；
+
+这个例子中glsl着色程序的唯一输入是一个属性值`a_position`；
+
+要做的第一件事是从刚刚创建的glsl着色程序中找到这个属性值所在的位置；
+
+```js
+var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+```
+
+寻找属性值位置（和全局属性位置）应该在**初始化**时完成，而不是在**渲染循环**中；
+
+属性值从缓冲中获取数据，所以创建一个缓冲：
+
+```js
+var positionBuffer = gl.createBuffer();
+```
+
+webgl可以通过**绑定点**操控**全局范围**内的许多数据，可以把绑定点想象成一个webgl内部的全局变量；
+
+首先绑定一个数据源到绑定点，然后可以引用绑定点指向该数据源；
+
+比如下面的绑定点就是ARRAY_BUFFER;
+
+```JS
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+```
+
+通过绑定点向缓存中存放数据
+
+```js
+// 三个二维点坐标
+var positions = [
+  0, 0,
+  0, 0.5,
+  0.7, 0,
+];
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+```
+
+这里做了哪些操作：
+
+- js序列`positions`
+- 创建了32位浮点型数据**序列**，从`positions`中复制数据到序列中
+- `gl.bufferData`复制这些数据到GPU的`positionBuffer`
+- gl.STATIC_DRAW提示webgl我们不会经常改变这些数据，属于优化
+
+最终传递到`positionBuffer`上是因为在前一步中将它绑定到了**ARRAY_BUFFER**(也就是绑定点)
+
+在此之上的代码是**初始化代码**，在页面加载时只会运行一次；
+
+接下来是**渲染代码**，而这些代码将在每次渲染或者绘制时执行；
+
+# 渲染
+
+绘制之前，应该调整画布尺寸匹配它的显示尺寸；
+
+画布和图片类似，有两个尺寸：
+
+- 实际像素个数；
+- 显示的大小；
+
+css决定画布显示的大小，**应该尽可能用css设置所需画布大小**，它比其他方式灵活的多
+
