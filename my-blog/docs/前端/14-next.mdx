@@ -1,3 +1,61 @@
+# 文件约定
+
+## middleware.js
+
+用于编写中间件，并在**请求完成之前**在服务器上运行的代码；
+
+根据传入的请求，可以通过**重写、重定向、修改请求或响应标头**或者直接响应来修改响应；
+
+中间件在渲染路由之前，它对于实现自定义服务器端逻辑：
+
+- 身份认证
+- 日志记录
+- 重定向
+
+特别有用。
+
+一般地，该文件与app或pages同一级，或在src内；
+
+### 配置对象
+
+可以和中间件一起导出，该对象包括匹配器来指定中间件应用的路径；
+
+### matcher
+
+运行指定中间件运行的特定路径：
+
+- 单个路径,`/about`
+- 多个路径,`['/about', '/contact']`
+- 复杂路径,`['/((?!api|_next/static|_next/image|.*\\.png$).*)']`
+
+matcher还接收具有以下键的对象：
+
+- source，匹配请求路径或模式
+- regexp，微调正则，路径的额外控制
+- locale，设置为false时，忽略路径匹配中基于区域设置的路由
+- has，根据特定请求元素（header、query、cookie）的存在来指定条件
+
+- missing，重点关注缺少某些请求元素的情况，例如缺少标头或cookie
+
+```js
+export const config = {
+  matcher: [
+    {
+      source: '/api/*',
+      regexp: '^/api/(.*)',
+      locale: false,
+      has: [
+        { type: 'header', key: 'Authorization', value: 'Bearer Token' },
+        { type: 'query', key: 'userId', value: '123' },
+      ],
+      missing: [{ type: 'cookie', key: 'session', value: 'active' }],
+    },
+  ],
+}
+```
+
+
+
 # 水合报错
 
 原因：服务器预渲染的**React树**和在浏览器中第一次渲染时渲染的**React树**不一致
