@@ -1,0 +1,25 @@
+# 追踪window上的应用发起网络请求的日志
+
+方案：
+
+- 网络捕获和分析工具，如wireshark、fiddler
+- window自带的netsh工具
+
+netsh(管理员执行)
+
+```bash
+netsh trace start capture=yes tracefile=C:\temp\nettrace.etl
+```
+
+启动想要监控的应用；
+
+然后，在应用中执行某些操作；
+
+停止捕获：
+
+```bash
+netsh trace stop
+```
+
+捕获的日志文件会保存在 `C:\temp\nettrace.etl`，可以使用 Microsoft Message Analyzer 或其他工具来分析这个文件;
+
