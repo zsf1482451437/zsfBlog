@@ -41,6 +41,24 @@ rm --help
 rmdir
 ```
 
+## 角色管理
+
+window
+
+```bash
+net localgroup Administrators "用户名" /add
+```
+
+管理员才能进行这个操作
+
+linux
+
+```bash
+sudo usermod -aG sudo 用户名
+```
+
+通常是将用户添加到sudo组
+
 ## 进程管理
 
 如何查看和控制进程（`ps`, `top`, `kill` 等），理解进程状态，以及后台和前台运行。
