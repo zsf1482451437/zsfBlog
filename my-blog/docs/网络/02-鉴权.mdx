@@ -1,0 +1,62 @@
+# 方式
+
+网络请求的鉴权方式有多种，常见的鉴权方式包括以下几种：
+
+## 1. 基本认证（Basic Authentication）
+基本认证通过在 HTTP 请求头中发送用户名和密码进行鉴权。用户名和密码以 Base64 编码的形式发送。
+
+```http
+Authorization: Basic base64(username:password)
+```
+
+## 2. API 密钥（API Key）
+API 密钥是一种简单的鉴权方式，客户端在请求中包含一个预先分配的密钥。
+
+```http
+Authorization: Api-Key your_api_key
+```
+
+## 3. OAuth 2.0
+OAuth 2.0 是一种广泛使用的授权框架，允许第三方应用访问用户资源而不暴露用户的凭据。常见的 OAuth 2.0 授权类型包括授权码模式、隐式模式、密码模式和客户端凭据模式。
+
+#### 示例：Bearer Token
+```http
+Authorization: Bearer your_access_token
+```
+
+## 4. JWT（JSON Web Token）
+JWT 是一种紧凑的、URL 安全的令牌格式，用于在各方之间传递声明。JWT 通常用于身份验证和信息交换。
+
+```http
+Authorization: Bearer your_jwt_token
+```
+
+## 5. HMAC（Hash-based Message Authentication Code）
+HMAC 使用共享密钥和哈希函数生成消息摘要，用于验证消息的完整性和真实性。
+
+#### 示例：AWS Signature Version 4
+```http
+Authorization: AWS4-HMAC-SHA256 Credential=your_access_key/20210915/us-east-1/service/aws4_request, SignedHeaders=host;x-amz-date, Signature=your_signature
+```
+
+## 6. Cookie-based Authentication
+服务器在用户登录后生成一个会话 ID，并将其存储在客户端的 Cookie 中。客户端在后续请求中发送该 Cookie 进行鉴权。
+
+```http
+Cookie: session_id=your_session_id
+```
+
+## 7. Digest Authentication
+Digest Authentication 是一种更安全的基本认证方式，通过使用哈希函数对凭据进行加密。
+
+```http
+Authorization: Digest username="your_username", realm="your_realm", nonce="your_nonce", uri="/your_uri", response="your_response", opaque="your_opaque"
+```
+
+## 8. Mutual TLS (mTLS)
+Mutual TLS 是一种双向认证机制，客户端和服务器都需要提供和验证对方的证书。
+
+## 9. SAML (Security Assertion Markup Language)
+SAML 是一种基于 XML 的开源标准，用于在身份提供者和服务提供者之间交换认证和授权数据。
+
+选择合适的鉴权方式取决于你的应用场景、安全需求和技术栈。
