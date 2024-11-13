@@ -1,6 +1,192 @@
 ---
-description: 前端项目的资源打包、开发辅助工具
+description: 前端项目的网络请求、资源打包、开发辅助工具
 ---
+
+# 网络请求
+
+主流方案：
+
+- axios
+- fetch
+
+## axios
+
+基于**Promise**的HTTP客户端，
+
+**用途**：在浏览器和node.js中发送http请求；
+
+**本质**：封装了`XMLHttpRequest`和`http`模块的第三方库；
+
+### **功能**
+
+- 发起XMLHttpRequest（浏览器）和http（node）请求
+- 拦截器
+- 取消
+- 超时
+- 捕获进度，附带额外信息（速度，剩余时间）
+- 支持Promise
+- 自动转化数据（请求体、响应）
+- 带宽限制（node）
+- 兼容符合规范的FormData和Blob
+- 客户端支持防御[XSRF]
+
+### 模块封装
+
+一般封装成类，结构如下:
+
+- 构造器（配置、拦截器）
+- 构造函数（复用axios实例）
+- 成员方法（http请求、取消、超时、进度）
+
+```js
+const axios = require('axios');
+const axiosThrottle = require('axios-request-throttle');
+
+class Request {
+  // 构造器
+  constructor(baseURL, timeout, config) {
+    // 创建axios实例
+    this.instance = axios.create({
+      baseURL: baseURL, // 替换为你的API基础URL
+      timeout: timeout, // 请求超时时间
+    });
+
+    // 如果启用了拦截器，则设置拦截器
+    if (config.enableInterceptors) {
+      this.setupInterceptors();
+    }
+
+    // 如果启用了带宽限制，则设置带宽限制
+    if (config.enableThrottle) {
+      axiosThrottle.use(this.instance, { requestsPerSecond: config.requestsPerSecond });
+    }
+  }
+
+  // 设置请求和响应拦截器
+  setupInterceptors() {
+    this.instance.interceptors.request.use(
+      (config) => {
+        // 在这里添加任何请求拦截逻辑
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    this.instance.interceptors.response.use(
+      (response) => {
+        // 在这里添加任何响应拦截逻辑
+        return response;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  // 发起请求
+  request(config) {
+    return this.instance.request(config);
+  }
+
+  // GET请求
+  get(config) {
+    return this.request({ ...config, method: 'GET' });
+  }
+
+  // POST请求
+  post(config) {
+    return this.request({ ...config, method: 'POST' });
+  }
+
+  // PUT请求
+  put(config) {
+    return this.request({ ...config, method: 'PUT' });
+  }
+
+  // DELETE请求
+  delete(config) {
+    return this.request({ ...config, method: 'DELETE' });
+  }
+
+  // 获取取消令牌
+  cancelToken() {
+    return axios.CancelToken.source();
+  }
+
+  // 设置默认超时时间
+  setDefaultTimeout(timeout) {
+    this.instance.defaults.timeout = timeout;
+  }
+
+  // 捕获上传进度
+  onUploadProgress(callback) {
+    this.instance.defaults.onUploadProgress = callback;
+  }
+
+  // 捕获下载进度
+  onDownloadProgress(callback) {
+    this.instance.defaults.onDownloadProgress = callback;
+  }
+}
+
+module.exports = Request;
+```
+
+使用
+
+```js
+import axios from 'axios';
+import Request from 'xxx';
+
+const config = {
+  enableInterceptors: true, // 启用拦截器
+  enableThrottle: true, // 启用带宽限制
+  requestsPerSecond: 5, // 每秒请求数限制
+};
+
+const request = new Request('https://api.example.com', 10000, config);
+
+// 发起 GET 请求
+request.get({ url: '/endpoint' })
+  .then(response => console.log(response))
+  .catch(error => console.error(error));
+
+// 发起 POST 请求
+request.post({ url: '/endpoint', data: { key: 'value' } })
+  .then(response => console.log(response))
+  .catch(error => console.error(error));
+
+// 取消请求
+const source = request.cancelToken();
+request.get({ url: '/endpoint', cancelToken: source.token })
+  .catch(thrown => {
+    if (axios.isCancel(thrown)) {
+      console.log('Request canceled', thrown.message);
+    } else {
+      console.error(thrown);
+    }
+  });
+source.cancel('Operation canceled by the user.');
+
+// 设置超时
+request.setDefaultTimeout(5000);
+
+// 捕获上传进度
+request.onUploadProgress(progressEvent => {
+  console.log('Upload Progress:', progressEvent);
+});
+
+// 捕获下载进度
+request.onDownloadProgress(progressEvent => {
+  console.log('Download Progress:', progressEvent);
+});
+```
+
+参考：https://axios-http.com/docs/intro
+
+## fetch
 
 # 前端工程化
 
