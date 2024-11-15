@@ -188,6 +188,81 @@ request.onDownloadProgress(progressEvent => {
 
 ## fetch
 
+### 基础用法
+
+- 获取数据
+- 发送数据
+- 处理错误
+
+#### 获取数据
+
+```js
+fetch(url)
+  .then(response => {/* do something */})
+```
+
+fetch返回一个Promise；
+
+第一个**then**回调函数的response长这样：
+
+```js
+{
+  body: ReadableStream
+  bodyUsed: false
+  headers: Headers
+  ok : true
+  redirected : false
+  status : 200
+  statusText : "OK"
+  type : "cors"
+  url : "http://some-website.com/some-url"
+  __proto__ : Response
+}
+```
+
+响应作为**可读流**，存在**body**中；
+
+需要调用适当的方法，将这个可读流，转化成可以使用的数据；
+
+不同类型的响应，使用对应方法：
+
+- json(response.json())
+- xml文件(response.text())
+- 图像(response.blob())
+
+
+
+#### 发送数据
+
+```js
+fetch('some-url', options);
+```
+
+其中，options包含三部分：
+
+- method（默认是GET, 还有POST, PUT, DELETE等等）
+- headers
+- body
+
+```js
+let content = {some: 'content'};
+
+// The actual fetch request
+fetch('some-url', {
+  method: 'post',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(content)
+})
+```
+
+如果要发送json类型数据，需要将`Content-Type`设置为**application/json**，且传递给body的需要**序列化**；
+
+#### 处理错误
+
+
+
 # 前端工程化
 
 ## babel
