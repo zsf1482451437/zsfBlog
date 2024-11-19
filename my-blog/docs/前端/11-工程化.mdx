@@ -261,6 +261,129 @@ fetch('some-url', {
 
 #### 处理错误
 
+fetch不关心ajax请求是否成功，只关心发送请求接收服务器的响应；
+
+如果请求失败，需要手动抛出错误；
+
+```js
+const handleResponse = (response) => {
+  return response.json().then((json) => {
+    if (response.ok) {
+      return json;
+    } else {
+      let error = Object.assign({}, json, {
+        status: response.status,
+        statusText: response.statusText,
+      });
+      return Promise.reject(error);
+    }
+  });
+};
+
+fetch('some-url')
+  .then(handleResponse)
+  .then((data) => console.log(data))
+  .catch((error) => console.log(error));
+```
+
+手动添加的`.then(handleResponse)`是为了：
+
+- 请求成功时，获取数据；
+- 请求失败时，捕获错误；
+
+> 拓展
+
+其它类型的响应，可以在`handleResponse`中添加参数，然后函数中判断
+
+```js
+// json类型
+const handleJsonResponse = (response) => {
+  return response.json().then((json) => {
+    if (response.ok) {
+      return json;
+    } else {
+      let error = Object.assign({}, json, {
+        status: response.status,
+        statusText: response.statusText,
+      });
+      return Promise.reject(error);
+    }
+  });
+};
+
+// xml类型
+const handleXmlResponse = (response) => {
+  return response.text().then((text) => {
+    let parser = new DOMParser();
+    let xml = parser.parseFromString(text, 'application/xml');
+    if (response.ok) {
+      return xml;
+    } else {
+      let error = {
+        status: response.status,
+        statusText: response.statusText,
+        message: text,
+      };
+      return Promise.reject(error);
+    }
+  });
+};
+
+// image类型
+const handleImageResponse = (response) => {
+  return response.blob().then((blob) => {
+    if (response.ok) {
+      return URL.createObjectURL(blob);
+    } else {
+      let error = {
+        status: response.status,
+        statusText: response.statusText,
+        message: 'Image fetch error',
+      };
+      return Promise.reject(error);
+    }
+  });
+};
+
+// 默认类型
+const handleTextResponse = (response) => {
+  return response.text().then((text) => {
+    if (response.ok) {
+      return text;
+    } else {
+      let error = {
+        status: response.status,
+        statusText: response.statusText,
+        message: text,
+      };
+      return Promise.reject(error);
+    }
+  });
+};
+
+const responseHandlers = {
+  'application/json': handleJsonResponse,
+  'application/xml': handleXmlResponse,
+  'text/xml': handleXmlResponse,
+  'image/': handleImageResponse,
+  default: handleTextResponse,
+};
+
+const handleResponse = (response) => {
+  let contentType = response.headers.get('content-type');
+  for (let type in responseHandlers) {
+    if (contentType.includes(type)) {
+      return responseHandlers[type](response);
+    }
+  }
+  return responseHandlers['default'](response);
+};
+
+export default handleResponse;
+```
+
+
+
 
 
 # 前端工程化
