@@ -3791,6 +3791,133 @@ export default useLocalStorage;
 
 其它组件只要使用**useLocalStorage**这个 hook 即可
 
+#### 元素可拖动
+
+```js
+import { useRef, useState, useEffect, useCallback } from 'react';
+
+/**
+ * useDraggable Hook
+ * @param {Object} options - Hook 的选项
+ * @param {Function} options.onDragStart - 拖动开始时的回调函数
+ * @param {Function} options.onDrag - 拖动进行时的回调函数
+ * @param {Function} options.onDragEnd - 拖动结束时的回调函数
+ * @param {boolean} options.supportTouch - 是否支持触摸事件，默认不支持
+ * @returns {Object} - 返回一个 ref 用于绑定到可拖动元素和当前的位置
+ */
+const useDraggable = ({ onDragStart, onDrag, onDragEnd, supportTouch = false } = {}) => {
+  const draggableRef = useRef(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+
+  // 处理鼠标或触摸移动事件: 计算新位置并更新元素位置
+  const handleMove = useCallback(
+    (startX, startY) => (moveEvent) => {
+      moveEvent.preventDefault();
+      const clientX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+      const clientY = moveEvent.touches ? moveEvent.touches[0].clientY : moveEvent.clientY;
+
+      // 新位置 = 鼠标/触摸位置 - 初始位置
+      const newX = clientX - startX;
+      const newY = clientY - startY;
+
+      setPosition({ x: newX, y: newY });
+      onDrag && onDrag({ x: newX, y: newY });
+
+      if (draggableRef.current) {
+        draggableRef.current.style.transform = `translate(${newX}px, ${newY}px)`;
+      }
+    },
+    [onDrag],
+  );
+
+  // 处理鼠标或触摸松开事件: 解绑移动和松开事件
+  const handleEnd = useCallback(
+    (handleMove) => (endEvent) => {
+      setIsDragging(false);
+      onDragEnd && onDragEnd(endEvent);
+
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleEnd);
+      if (supportTouch) {
+        document.removeEventListener('touchmove', handleMove);
+        document.removeEventListener('touchend', handleEnd);
+      }
+    },
+    [onDragEnd, supportTouch],
+  );
+
+  // 处理鼠标或触摸按下事件: 计算初始位置并绑定移动和松开事件
+  const handleStart = useCallback(
+    (event) => {
+      if (event.button !== undefined && event.button !== 0) return; // 只允许左键拖动
+
+      setIsDragging(true);
+      onDragStart && onDragStart(event);
+
+      const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+      const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+
+      // 初始位置 = 鼠标/触摸位置 - 元素当前位置
+      const startX = clientX - position.x;
+      const startY = clientY - position.y;
+
+      const moveHandler = handleMove(startX, startY);
+      const endHandler = handleEnd(moveHandler);
+
+      document.addEventListener('mousemove', moveHandler);
+      document.addEventListener('mouseup', endHandler);
+      if (supportTouch) {
+        document.addEventListener('touchmove', moveHandler, { passive: false });
+        document.addEventListener('touchend', endHandler, { passive: false });
+      }
+    },
+    [position, onDragStart, handleMove, handleEnd, supportTouch],
+  );
+
+  // 绑定和解绑事件监听器，并设置 cursor 样式
+  useEffect(() => {
+    const element = draggableRef.current;
+    if (!element) return;
+
+    element.addEventListener('mousedown', handleStart);
+    if (supportTouch) {
+      element.addEventListener('touchstart', handleStart, { passive: false });
+    }
+
+    // 设置 cursor 样式
+    element.style.cursor = isDragging ? 'grabbing' : 'grab';
+
+    return () => {
+      element.removeEventListener('mousedown', handleStart);
+      if (supportTouch) {
+        element.removeEventListener('touchstart', handleStart);
+      }
+      element.style.cursor = ''; // 清除 cursor 样式
+    };
+  }, [handleStart, isDragging, supportTouch]);
+
+  return { draggableRef };
+};
+
+export default useDraggable;
+```
+
+### 元素拖动的完整流程
+
+1. **用户按下鼠标左键（开始触摸）**：
+   - 触发 **handleMouseDown** 事件。
+   - 计算初始位置 startX 和 startY。
+   - 添加 `mousemove` 和 `mouseup` 事件监听器。
+2. **用户移动鼠标（滑动）**：
+   - 触发 **handleMouseMove**事件。
+   - 计算新的位置 newX 和 newY。
+   - 更新 `position` 状态，并移动元素到新的位置。
+3. **用户松开鼠标（松开）**：
+   - 触发 **handleMouseUp** 事件。
+   - 设置 **isDragging** 状态为 `false`。
+   - 移除 `mousemove` 和 `mouseup` 事件监听器。
+
 ## 路由
 
 React Router6.x 发生了较大的变化，目前它已经非常稳定，可以放心使用；
