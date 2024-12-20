@@ -124,3 +124,93 @@ Warning: Prop `style` did not match. Server: "null" Client: "color:"
 比如，Cloudflare Auto Minify
 
 解决方法：禁用
+
+# 项目价值
+
+## SSR/SSG实现和优化
+
+SSR（Sever-Side Rendering）和（Static Site Generation）是Next.js的核心功能。
+
+- 是否使用了合适的渲染模式:
+  - 动态页面：通过`getServerSideProps`实现动态数据的服务端渲染
+  - 静态页面：通过`getStaticProps`提前生成静态内容
+
+- 是否对数据的**预取**和**缓存策略**进行了优化？
+- 是否有**增量静态再生成**（ISR）的应用场景/
+
+性能优化：
+
+- SSR**渲染性能**是否因为数据请求过多或计算复杂导致延迟
+- 是否使用**CDN缓存**或适当的`revalidate`来减少服务器负载
+
+## API路由设计
+
+- 是否使用了API路由（/pages/api）来处理后端逻辑
+- API的分层设计是否清晰，是否符合restful或graphql的规范
+- 是否有合理的中间件（认证、日志记录、错误处理）?
+- 是否有良好的输入验证机制（zod或joi）？
+
+## 组件库设计和复用
+
+- 项目是否包含一个高复用性的组件库？
+  - 组件是否具备良好的可配置性和拓展性/
+  - 是否有良好的样式隔离（css module、styled component、tailwind css）？
+  - 组件库是否有合理的测试覆盖，支持单元测试（如jest、react test library）？
+
+## 国际化配置
+
+- 项目是否采用了next内置的国际化支持（i18n配置）？
+
+- 国际化是否结合了动态路由和动态站点生成？
+
+- 翻译文件的管理是否简洁高效（如基于json、yaml格式）？
+
+- 是否有动态切换语言的功能？如何处理SEO（如herflang标签）？
+
+  
+
+## 状态管理
+
+- 是否使用了状态管理工具？
+  - 局部状态：react context、zustand、recoil等轻量级工具？
+  - 全局状态：是否使用了Redux、Mobx或Apollo Client（GraghQL）？ 
+
+- 状态管理的层级设计是否清晰？是否存在性能优化（避免过多的re-render）？
+
+## 路由和动态路由
+
+- 是否有复杂的动态路由实现（如嵌套路由、带参数的动态路由）？
+- 是否使用了gerStaticPaths来生成动态页面？
+- 是否有路由守卫（基于权限的页面访问控制）？
+
+## 性能优化
+
+- 是否使用了Next.js的内置优化功能？
+  - 图片优化（next、image）
+  - 代码分隔与懒加载
+  - 静态资源优化
+
+- 是否对首屏、TTV、TTFB等指标做了监控和优化？
+- 是否有服务端缓存或CDN配置？
+
+## CI/CD流程
+
+- 是否有完整的CI/CD流程？
+  - 是否自动化部署到某个服务器？
+  - 是否集成了代码质量检查（ESlint、Prettier）和测试工具？
+  - 是否有良好的环境变量管理？
+
+## 日志和监控
+
+- 是否有日志记录和监控系统？
+  - 前端错误监控（如Sentry、LogRocket）
+  - 性能监控工具（Lighthouse、Web Vitals）
+
+- 是否对关键操作有埋点统计？
+
+## 安全性
+
+- 是否有良好的安全性设计？
+  - XSS防护：是否对用户输入进行了有效转义？
+  - CSRF防御：是否使用了CSRF Tokens？
+  - 身份认证：是否实现了基于JWT或Session的认证机制？
