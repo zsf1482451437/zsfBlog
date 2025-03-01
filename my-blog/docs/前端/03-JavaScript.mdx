@@ -209,7 +209,7 @@ vscode → 首选项按钮 → 键盘快捷方式 → 查找 原来的快捷键 
 
 ![image-20220225172447938](./img/image-20220225172447938.png)
 
-​ **本质**：**变量**是**程序**在**内存中**申请的一块用来**存放数据的空间**。类似我们酒店的房间，一个房间就可以看做是一个变量。
+ **本质**：**变量**是**程序**在**内存中**申请的一块用来**存放数据的空间**。类似我们酒店的房间，一个房间就可以看做是一个变量。
 
 ### 命名规范
 
@@ -1715,53 +1715,163 @@ var p = new bar(); //foo
 
 #### call
 
-补充：
-
-**展开运算符...**(类似遍历)
+它的作用是，立即执行函数，并显式指定函数内部的this；
 
 ```js
-var names = ["abc", "abb", "ccc"];
-function foo(n1, n2, n3) {}
-foo(...names);
-```
-
-自己实现
-
-```js
-// 给所有函数加上一个自定义call
-Function.prototype.sfcall = function (thisArg, ...args) {
-  // 在这里可以执行调用者（函数）
-  // 问题1：如何获取到是哪个函数调用了sfcall?
-  var fn = this;
-  // 边界情况edge case1 对thisArg转成对象类型（防止传入非对象类型报错）
-
-  // 边界情况edge case2 传入参数null/undefined
-  thisArg = thisArg ? Object(thisArg) : window;
-  // 边界情况edge case2 调用者（函数）有一个或多个参数时
-  // 如何执行调用者（函数）?
-  thisArg.fn = fn;
-  // 边界情况edge case3 调用者有返回值
-  var result = thisArg.fn(...args);
-  delete thisArg.fn;
-  // 返回调用者的返回值
-  return result;
-};
-
-function foo(n1, n2) {
-  console.log("foo执行了", this, n1, n2);
-  console.log(n1 + n2);
+function test(msg) {
+  console.log(msg, this.name);
 }
 
-foo.sfcall("sss", 1, 2);
+const obj = {
+  name: 'obj',
+};
+
+test.call(obj, 'hhh'); // hhh obj
+```
+
+**自定义实现**
+
+```js
+function test(msg) {
+  const name = 'test';
+  console.log(msg, this.name);
+}
+
+const obj = {
+  name: 'obj',
+};
+// 如果使用const，做不到将name绑定到window上;
+// 因为const声明的变量是块级作用域，而var声明的变量会被提升到全局作用域
+var name = 'var'; 
+console.log(window.name); // var
+const name1 = 'const';
+console.log(window.name1); // undefined
+
+Function.prototype.myCall = function(context, ...args){
+  // 判断context是否为对象，如果为null或者undefined，则指向window，处理直接调用函数的情况test.call()
+  context = context || window; // 浏览器环境下是window，node环境下是global
+
+  // 将当前函数的this（指向test）作为context对象的一个属性(fn)，就能把当前函数的调用者（test）绑定到context对象上
+  // 已知调用context.fn()，fn中的this指向context对象，
+  // 而调用context.fn()就是调用test函数，所以test函数的this指向context对象
+  // 防止fn和context对象中的属性重名，使用Symbol类型的属性名
+  const fn = Symbol('fn');
+  console.log(this.name); // test
+  context[fn] = this;
+  // 执行，并传入参数
+  const result = context[fn](...args);
+  // 删除fn属性，避免污染context对象
+  delete context[fn];
+  // 返回执行结果,与原生的call方法一致
+  return result;
+}
+// 目标，将test函数中的this指向obj对象(借用上下文，或者说将test函数绑定到obj对象上)
+test.myCall(obj, 'hhh'); // hhh obj
+test.myCall(undefined, 'hhh'); // hhh window
 ```
 
 #### apply
 
-有时间再补
+实现与call类似
+
+他与call的区别是，调用者要是有多个参数(p1,p2)，它传递的是一个数组[p1,p2]
+
+```js
+Function.prototype.myApply = function(context, argsArray) {
+  // 1. 如果 context 为 null 或 undefined，默认指向全局对象
+  context = context || window;
+
+  // 2. 将当前函数（this）作为 context 的一个属性
+  const fnKey = Symbol('fn');
+  context[fnKey] = this;
+
+  // 3. 执行函数，并传入参数数组
+  const result = context[fnKey](...argsArray);
+
+  // 4. 删除临时属性
+  delete context[fnKey];
+
+  // 5. 返回函数执行结果
+  return result;
+};
+function greet(message, punctuation) {
+  console.log(`${message}, ${this.name}${punctuation}`);
+}
+
+const user = { name: 'Bob' };
+greet.myApply(user, ['Hi', '!']); // 输出: Hi, Bob!
+```
 
 #### bind
 
-有时间再补
+返回一个新函数，将this绑定到指定上下文，支持柯里化
+
+```js
+function test(msg, age) {
+  console.log(msg, this.name, age);
+}
+
+const obj = {
+  name: 'obj',
+};
+
+const fn = test.bind(obj, 'hhh');
+fn(18); // hhh obj 18
+```
+
+**自定义实现**
+
+```js
+function test(msg, age) {
+  console.log(msg, this.name, age);
+}
+
+const obj = {
+  name: 'obj',
+};
+
+Function.prototype.myBind = function(context, ...bindArgs){
+  const self = this; // 调用者副本
+
+  // 返回一个新函数
+  return function(...callArgs){
+    // 合并绑定参数和调用参数
+    const args = [...bindArgs, ...callArgs];
+
+    // 调用调用者副本，并传入上下文和参数
+    return self.apply(context, args);
+  }
+
+}
+
+// 目标
+const fn = test.myBind(obj, 'hhh');
+fn(18); // hhh obj 18
+```
+
+- 返回一个新函数，支持柯里化（分次传递参数）。
+- 使用 `apply` 绑定 `this` 并执行原函数。
+- 合并绑定参数和调用参数。
+
+**拓展：支持new操作的bind**
+
+如果new调用bind返回的函数，那this指向的是新创建的实例，而不是指定的上下文
+
+```js
+function Person(name) {
+  this.name = name;
+}
+
+const obj = {
+  name: 'obj',
+};
+
+const fn = Person.bind(obj, 'cs');
+const instance = new fn();
+console.log(instance.name); // cs 
+```
+
+**自定义实现**
 
 ## 内存管理
 
