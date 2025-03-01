@@ -1,0 +1,49 @@
+# 1.如何测试一个函数？
+
+```js
+// math.js
+function add(a, b) {
+  return a + b;
+}
+
+module.exports = add;
+```
+
+测试逻辑
+
+```js
+// math.test.js
+const add = require('./math');
+
+describe('add函数', () => {
+  it('常规相加', () => {
+    expect(add(1, 2)).toBe(3);
+  });
+
+  it('负数相加', () => {
+    expect(add(1, -2)).toBe(-1);
+  });
+
+  it('0相加', () => {
+    expect(add(0, 0)).toBe(0);
+  });
+});
+```
+
+涉及函数需了解：
+
+- describe `Jest全局函数`
+- it `Jest全局函数`
+- expect `Jest全局函数`
+- toBe `匹配器方法`
+
+## describe(desc, callback) 
+
+相关的测试用例**分组**
+
+- desc：描述
+- callback：包含一个或多个测试用例的函数
+
+## it(desc, callback)
+
+定义单独

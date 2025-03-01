@@ -1,0 +1,216 @@
+# 文件约定
+
+## middleware.js
+
+用于编写中间件，并在**请求完成之前**在服务器上运行的代码；
+
+根据传入的请求，可以通过**重写、重定向、修改请求或响应标头**或者直接响应来修改响应；
+
+中间件在渲染路由之前，它对于实现自定义服务器端逻辑：
+
+- 身份认证
+- 日志记录
+- 重定向
+
+特别有用。
+
+一般地，该文件与app或pages同一级，或在src内；
+
+### 配置对象
+
+可以和中间件一起导出，该对象包括匹配器来指定中间件应用的路径；
+
+### matcher
+
+运行指定中间件运行的特定路径：
+
+- 单个路径,`/about`
+- 多个路径,`['/about', '/contact']`
+- 复杂路径,`['/((?!api|_next/static|_next/image|.*\\.png$).*)']`
+
+matcher还接收具有以下键的对象：
+
+- source，匹配请求路径或模式
+- regexp，微调正则，路径的额外控制
+- locale，设置为false时，忽略路径匹配中基于区域设置的路由
+- has，根据特定请求元素（header、query、cookie）的存在来指定条件
+
+- missing，重点关注缺少某些请求元素的情况，例如缺少标头或cookie
+
+```js
+export const config = {
+  matcher: [
+    {
+      source: '/api/*',
+      regexp: '^/api/(.*)',
+      locale: false,
+      has: [
+        { type: 'header', key: 'Authorization', value: 'Bearer Token' },
+        { type: 'query', key: 'userId', value: '123' },
+      ],
+      missing: [{ type: 'cookie', key: 'session', value: 'active' }],
+    },
+  ],
+}
+```
+
+
+
+# 水合报错
+
+原因：服务器预渲染的**React树**和在浏览器中第一次渲染时渲染的**React树**不一致
+
+## 常见类型
+
+- 不正确的元素嵌套
+- 服务端和客户端属性不匹配
+- 服务端渲染时使用浏览器API
+- 使用非确定性内容
+- 浏览器插件修改html
+- 不正确的css-in-js配置
+- 不正确的Edge/CDN配置修改html响应
+
+### 不正确的元素嵌套
+
+- p嵌套p
+- p嵌套div
+- p嵌套ul或ol
+- 交互式内容嵌套（a嵌套a，button嵌套button等等）
+
+解决方法：**避免这种元素结构**
+
+### 服务端和客户端属性不匹配
+
+场景：
+
+```html
+<p style={{ color: excessDays <= 3 && !isUsed ? '#E33618' : '' }}></p>
+```
+
+```
+Warning: Prop `style` did not match. Server: "null" Client: "color:"
+```
+
+
+
+### 服务端渲染时使用浏览器API
+
+服务端渲染时使用window、localStorage等浏览器特定API
+
+解决方法：**使用useEffect确保仅在客户端使用这些API**
+
+### 使用非确定性内容
+
+比如，Date()
+
+解决方法：避免使用
+
+### 浏览器插件修改html
+
+比如，[Apollo Client Devtools](https://chrome.google.com/webstore/detail/apollo-client-devtools/jdkknkkbebbapilgoeccciglkfbmbnfm) 
+
+解决方法：禁用该插件或恢复修改内容
+
+### 不正确的css-in-js配置
+
+比如，styled-component
+
+解决方法：参考next官网配置 https://nextjs.org/docs/pages/building-your-application/routing/custom-document
+
+### 不正确的Edge/CDN配置修改html响应
+
+使用边缘网络（Edge Network）或内容分发网络（CDN）时，如果这些服务尝试修改 HTML 响应（例如 Cloudflare 的自动压缩功能），可能会导致 Next.js 的水合报错;
+
+比如，Cloudflare Auto Minify
+
+解决方法：禁用
+
+# 项目价值
+
+## SSR/SSG实现和优化
+
+SSR（Sever-Side Rendering）和（Static Site Generation）是Next.js的核心功能。
+
+- 是否使用了合适的渲染模式:
+  - 动态页面：通过`getServerSideProps`实现动态数据的服务端渲染
+  - 静态页面：通过`getStaticProps`提前生成静态内容
+
+- 是否对数据的**预取**和**缓存策略**进行了优化？
+- 是否有**增量静态再生成**（ISR）的应用场景/
+
+性能优化：
+
+- SSR**渲染性能**是否因为数据请求过多或计算复杂导致延迟
+- 是否使用**CDN缓存**或适当的`revalidate`来减少服务器负载
+
+## API路由设计
+
+- 是否使用了API路由（/pages/api）来处理后端逻辑
+- API的分层设计是否清晰，是否符合restful或graphql的规范
+- 是否有合理的中间件（认证、日志记录、错误处理）?
+- 是否有良好的输入验证机制（zod或joi）？
+
+## 组件库设计和复用
+
+- 项目是否包含一个高复用性的组件库？
+  - 组件是否具备良好的可配置性和拓展性/
+  - 是否有良好的样式隔离（css module、styled component、tailwind css）？
+  - 组件库是否有合理的测试覆盖，支持单元测试（如jest、react test library）？
+
+## 国际化配置
+
+- 项目是否采用了next内置的国际化支持（i18n配置）？
+
+- 国际化是否结合了动态路由和动态站点生成？
+
+- 翻译文件的管理是否简洁高效（如基于json、yaml格式）？
+
+- 是否有动态切换语言的功能？如何处理SEO（如herflang标签）？
+
+  
+
+## 状态管理
+
+- 是否使用了状态管理工具？
+  - 局部状态：react context、zustand、recoil等轻量级工具？
+  - 全局状态：是否使用了Redux、Mobx或Apollo Client（GraghQL）？ 
+
+- 状态管理的层级设计是否清晰？是否存在性能优化（避免过多的re-render）？
+
+## 路由和动态路由
+
+- 是否有复杂的动态路由实现（如嵌套路由、带参数的动态路由）？
+- 是否使用了gerStaticPaths来生成动态页面？
+- 是否有路由守卫（基于权限的页面访问控制）？
+
+## 性能优化
+
+- 是否使用了Next.js的内置优化功能？
+  - 图片优化（next、image）
+  - 代码分隔与懒加载
+  - 静态资源优化
+
+- 是否对首屏、TTV、TTFB等指标做了监控和优化？
+- 是否有服务端缓存或CDN配置？
+
+## CI/CD流程
+
+- 是否有完整的CI/CD流程？
+  - 是否自动化部署到某个服务器？
+  - 是否集成了代码质量检查（ESlint、Prettier）和测试工具？
+  - 是否有良好的环境变量管理？
+
+## 日志和监控
+
+- 是否有日志记录和监控系统？
+  - 前端错误监控（如Sentry、LogRocket）
+  - 性能监控工具（Lighthouse、Web Vitals）
+
+- 是否对关键操作有埋点统计？
+
+## 安全性
+
+- 是否有良好的安全性设计？
+  - XSS防护：是否对用户输入进行了有效转义？
+  - CSRF防御：是否使用了CSRF Tokens？
+  - 身份认证：是否实现了基于JWT或Session的认证机制？
