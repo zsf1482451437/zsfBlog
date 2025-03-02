@@ -7627,25 +7627,133 @@ module.exports = {
 
 ## 防抖与节流
 
-**为什么需要防抖和节流？**
 
-js 是事件驱动的，大量的操作会触发事件，加入到事件队列中去
-
-而对于某些**频繁的事件处理**会造成**性能损耗**
-
-我们就可以通过防抖和节流来**限制**事件频繁的发生
-
-比如输入框的联想，如果每次输入一个字符都需要请求一次（输入的很快），那将对服务器压力非常大；
-
-我们应该做一个**限制**：设置一个等待计时器，当用户 500ms 内有新输入，就清空等待时间，重新计时，再等待 500ms，只有计数器超过 500ms 才会发送请求~
-
-这是防抖的一个典型应用
 
 ### 防抖
 
-debounce
+防抖的目的是，**限制高频事件的发生频率**，确保只有事件停止触发一段时间后，才会执行目标操作。
 
-往后推延
+核心思路：
+
+- **延迟执行**，事件触发后，不立即执行函数，等待一段时间
+- **重新计时**，若等待时间内，事件再触发，则重新开始技计时
+- **最终执行**，只有在等待时间内，没有再次触发事件，才最终执行目标函数
+
+#### **通用版**
+
+为了兼容防抖目标是
+
+- 普通函数
+- 箭头函数
+- 对象方法
+
+如果防抖目标不是对象方法，那去掉上下文保存的逻辑，防抖也能正常工作。
+
+```js
+const debounceElement = document.getElementById("xxx");
+const handleClick = function (e) {
+  console.log("点击了一次");
+};
+function debounce (fn, delay) {
+  let timer;
+  // 返回一个函数,为了不破坏防抖目标可能需要传入参数，这里也需要接收参数
+  return function (...args) {
+    // 保存上下文
+    const context = this;
+    // 清除之前的计时器
+    if (timer) {
+      clearTimeout(timer);
+    }
+    // 延迟执行，等待时间内再次触发时，重新计时，设置新的计时器
+    timer = setTimeout(() => {
+      // 如果防抖目标是一个对象的方法，且需要使用对象的上下文，需要显式指定this
+      fn.apply(context, args);
+    }, delay);
+  }
+}
+
+// 一般防抖函数反回的函数，会直接调用，上下文会是window,所以实现时需要保存上下文
+const obj = {
+  name: 'obj',
+  showName () {
+    console.log(this.name);
+  }
+}
+// 目标
+const debounceTest = debounce(obj.showName, 1000);
+debounceTest();
+debounceElement.onclick = debounce(handleClick, 500);
+```
+
+#### 立即执行
+
+```js
+function debounce(func, wait, immediate) {
+  let timeout;
+  return function (...args) {
+    const context = this;
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    if (immediate && !timeout) {
+      // 如果 immediate 为 true 且没有定时器，立即执行
+      func.apply(context, args);
+    }
+    timeout = setTimeout(() => {
+      timeout = null; // 清空定时器
+      if (!immediate) {
+        // 如果不是立即执行模式，则执行目标函数
+        func.apply(context, args);
+      }
+    }, wait);
+  };
+}
+```
+
+#### 取消
+
+```js
+function debounce(func, wait) {
+  let timeout;
+  const debounced = function (...args) {
+    const context = this;
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(() => {
+      func.apply(context, args);
+    }, wait);
+  };
+  // 添加取消方法
+  debounced.cancel = function () {
+    if (timeout) {
+      clearTimeout(timeout); // 清除定时器
+      timeout = null; // 重置 timeout
+    }
+  };
+  return debounced;
+}
+```
+
+举例
+
+```js
+// 目标函数
+function onScroll() {
+  console.log('正在滚动...');
+}
+// 使用防抖函数包装 onScroll
+const debouncedScroll = debounce(onScroll, 500);
+// 绑定滚动事件
+window.addEventListener('scroll', debouncedScroll);
+// 取消防抖的等待过程
+document.getElementById('cancelButton').addEventListener('click', () => {
+  debouncedScroll.cancel();
+  console.log('滚动事件已取消');
+});
+```
+
+
 
 #### 应用场景
 
@@ -7655,125 +7763,6 @@ debounce
 - 监听浏览器滚动事件，完成某些特定操作
 - 用户缩放浏览器的 resize 事件
 - 等待
-
-#### 手写
-
-设置一个计时器
-
-如果在规定时间内有重复事件触发，则清空计时器，重新计时。
-
-直到超出规定时间，才会触发事件
-
-##### 基本实现
-
-```js
-const debounceElement = document.getElementById("debounce");
-const handleClick = function (e) {
-  console.log("点击了一次");
-};
-// debounce防抖函数
-function debounce(fn, delay) {
-  // 定一个定时器对象，保存上一次的定时器
-  let timer = null;
-  // 真正执行的函数
-  function _debounce() {
-    // 取消上一次的定时器
-    if (timer) {
-      clearTimeout(timer);
-    }
-    // 延迟执行
-    timer = setTimeout(() => {
-      fn();
-    }, delay);
-  }
-  return _debounce;
-}
-debounceElement.onclick = debounce(handleClick, 300);
-```
-
-##### this-参数
-
-```js
-function debounce(fn, delay) {
-  let timer = null;
-
-  const _debounce = function (...args) {
-    // 重置上一次的计时器,前提timer有值
-    if (timer) clearTimeout(timer);
-    // 重新计时
-    timer = setTimeout(() => {
-      // 显示绑定this，防止独立调用this指向window，这个工具函数的this应该指向事件对象
-      fn.apply(this, args);
-    }, delay);
-  };
-
-  return _debounce;
-}
-```
-
-##### 立即执行
-
-```js
-function debounce(fn, delay, immediate = false) {
-  let timer = null;
-  let isInvoke = false;
-
-  const _debounce = function (...args) {
-    // 重置上一次的计时器,前提timer有值
-    if (timer) clearTimeout(timer);
-
-    // 判断是否是立即执行
-    if (immediate && !isInvoke) {
-      fn.apply(this, args);
-    }
-    // 重新计时
-    timer = setTimeout(() => {
-      // 显示绑定this，防止独立调用this指向window，这个工具函数的this应该指向事件对象
-      fn.apply(this, args);
-      isInvoke = true;
-    }, delay);
-  };
-
-  return _debounce;
-}
-```
-
-##### 取消
-
-```js
-function debounce(fn, delay, immediate = false) {
-  let timer = null;
-  let isInvoke = false;
-
-  const _debounce = function (...args) {
-    // 重置上一次的计时器,前提timer有值
-    if (timer) clearTimeout(timer);
-
-    // 判断是否是立即执行
-    if (immediate && !isInvoke) {
-      fn.apply(this, args);
-    }
-    // 重新计时
-    timer = setTimeout(() => {
-      // 显示绑定this，防止独立调用this指向window，这个工具函数的this应该指向事件对象
-      fn.apply(this, args);
-      isInvoke = true;
-      timer = null;
-    }, delay);
-  };
-
-  // 取消功能
-  _debounce.cancel = function () {
-    if (timer) {
-      clearTimeout(timer);
-    }
-    timer = null;
-    isInvoke = false;
-  };
-
-  return _debounce;
-}
-```
 
 ### 节流
 
