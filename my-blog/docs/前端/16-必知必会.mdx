@@ -124,3 +124,310 @@ Cache-Control: no-store
 ```
 
 - `no-store` 表示禁止浏览器缓存资源。
+
+# 工程化
+
+## 工程化基础
+
+### 构建工具
+
+> 用过哪些构建工具？对比下各自优缺点以及适用场景
+
+**webpack**
+
+- 优点：生态成熟，插件系统丰富
+- 缺点：配置复杂，构建速度相对较慢
+- 场景：需要代码分割，懒加载，复杂资源处理的场景
+
+**vite**
+
+- 优点：基于ESM的按需编译，开发环境启动快速，开箱即用
+- 缺点：生态较新，部分插件不完善
+- 场景：现代浏览器项目，快速原型开发
+
+**rollup**
+
+- 优点：输出代码更干净，适合库打包
+- 缺点：插件生态少，不适合复杂应用
+- 场景：开发第三方库
+
+> vite为什么快
+
+
+
+> 代码分割配置和原理
+
+
+
+> 如果构建速度慢，你会如何分析和优化（考察tree shaking、缓存、并行）
+
+### 模块化与包管理
+
+> ES Module和Common JS的区别是什么？webpack如何解析他们？
+
+
+
+> 如何设计一个可复用的前端组件库？需要考虑哪些工程问题（按需加载、工程化等问题）？
+
+
+
+> 遇到过npm 或 yarn的依赖冲突吗？如何解决？
+
+### 代码质量规范
+
+> 如何保证团队代码风格统一？如何配置ESLint/Prettier
+
+
+
+> 如何在项目中集成单元测试（Jest）和E2E测试（如Cypress）
+
+
+
+> 如何通过git hooks在提交代码时自动检查规范
+
+## 性能优化和部署
+
+### 优化策略
+
+> 首屏加载时间过长的原因有哪些？如何针对性优化？
+
+
+
+> 如何利用 Webpack 的 SplitChunks 优化产物体积？
+
+
+
+> 是否实现过 SSR（服务端渲染）或静态站点生成（SSG）？解决了什么问题？
+
+
+
+### 自动化部署ci/cd
+
+> 如何配置项目的自动化部署流程（如 Jenkins/GitHub Actions）？
+
+
+
+> 如何实现灰度发布或 AB 测试？
+
+
+
+> 前端资源如何做 CDN 加速？如何解决缓存更新问题（如文件名 Hash）？
+
+## 原理
+
+### 工具链底层
+
+> webpack中plugin和loader的区别是什么？
+
+#### **loader**
+
+- **背景**：webpack将项目所有资源（js，css，图片，字体等资源）视为模块，但webpack核心功能是处理js模块。所以需要一种转换机制，将非js模块转化成js模块
+
+- **作用**：非js模块转化成js模块(转换文件)
+- **应用场景**：
+  - css/scss【css-loader、style-loader、sass-loader】转化为js模块后，注入DOM
+  - 图片/字体【file-loader、url-loader】转化为js模块后，输出到指定目录
+  - es6的js【babel-loader】转为es5的代码，兼容旧浏览器
+  - vue/jsx/tsx【vue-loader、babel-loader】转化为js模块
+
+- **工作流程**：
+  - **匹配文件**：通过正则匹配需要处理的文件（.css、.png）
+  - **转换文件**：使用loader将文件内容转化成为js模块
+  - **添加到依赖图**：将转换后的模块添加到webpack的依赖图中，参与打包
+
+#### **plugin**
+
+- **前置知识**：webpack构建过程
+
+  - **初始化**：读取配置文件和命令行参数
+  - **编译**：从入口文件开始，递归接解析模块依赖，调用loader处理模块
+  - **输出**：将处理后的模块，打包成最终的bundle文件
+
+  在每个阶段，webpack提供了hooks，运行开发者干预构建过程
+
+- **背景**：loader的作用是处理单个文件的转换，有些场景无法处理
+
+  - **全局操作**：打包优化、资源管理、环境变量注入
+  - **构建过程干预**：如打包完成生成一个报告、或打包完成清理输出目录
+
+  这些是loader的局限性，所以需要一种机制，干预构建过程，这便是plugin的作用
+
+- **应用场景**：
+
+  - **干预构建过程**：通过webpack提供的钩子，在特定阶段实现自定义逻辑
+  - **拓展功能**：生成HTML文件【HtmlWebpackPlugin】、压缩代码【TerserWebpackPlugin】、提取CSS【`MiniCssExtractPlugin`】等
+  - **优化构建**：代码分割，tree-shaking、缓存优化等
+
+- **工作原理**
+
+  - **钩子机制**：webpack构建过程每个阶段，都会触发相应的钩子，**plugin**可以通过监听这些钩子来执行自定义逻辑
+
+    常见钩子：
+
+    - compilation：编译阶段触发，可以访问模块和chunk
+    - emit：生成资源输出到目录之前触发，可以修改输出内容
+    - done：在构建完成后触发，可以生成构建报告
+
+  - **实现方式**
+
+    plugin是一个类，他需要实现一个apply方法，在apply方法中，可以监听到webpack提供的钩子，从而实现一下自定义逻辑
+
+    ```js
+    class MyPlugin {
+      apply(compiler) {
+        compiler.hooks.done.tap('MyPlugin', (stats) => {
+          console.log('构建完成！');
+        });
+      }
+    }
+    
+    module.exports = MyPlugin;
+    ```
+
+##### **apply方法的设计模式**
+
+apply方法是基于**依赖注入**（Dependency Injection）和**观察者模式**（Observer Pattern）的
+
+**依赖注入**
+
+- **定义**：将依赖对象通过参数注入到目标对象中，而不是在目标对象内部创建
+- **应用**：webpack将**compiler**实例注入到插件的**apply**方法中，插件不需要关系compiler何时创建
+
+```js
+// Webpack 源码简化逻辑
+class Webpack {
+  constructor(options) {
+    this.options = options;
+    this.compiler = new Compiler();
+    this.setupPlugins();
+  }
+
+  setupPlugins() {
+    const plugins = this.options.plugins || [];
+    plugins.forEach((plugin) => {
+      plugin.apply(this.compiler); // 调用插件的 apply 方法
+    });
+  }
+}
+```
+
+
+
+**观察者模式**
+
+- **定义**：定义对象间一对多依赖关系，当一个对象的状态发生变化时，所有依赖它的对象都会收到通知并自动更新
+- **应用**：webpack的**钩子机制**基于观察者模式，插件通过监听钩子来响应构建过程中的不同阶段
+
+```js
+// Webpack 源码简化逻辑
+class Compiler {
+  constructor() {
+    this.hooks = {
+      done: new SyncHook(['stats']), // 定义 done 钩子
+    };
+  }
+
+  run() {
+    // 构建过程
+    this.hooks.done.call(stats); // 触发 done 钩子
+  }
+}
+```
+
+
+
+
+
+> 手写一个简易的plugin和loader
+
+loader
+
+```js
+// 文件内容替换loader
+module.exports = function (source) {
+  // source 是文件内容
+  return source.replace('World', 'Loader');
+};
+```
+
+plugin
+
+上文有
+
+> Babel 是如何实现代码转换的？AST（抽象语法树）在其中扮演什么角色？
+
+
+
+> 如何理解 Vite 的“基于 ESM 的按需编译”原理？对比 Webpack 的打包机制。
+
+
+
+### 工程化架构设计
+
+> 如何设计一个支持微前端（Micro Frontends）的项目架构？
+
+
+
+> 如何实现项目的多环境配置（开发、测试、生产）？
+
+
+
+> 如果让你从零搭建一个前端工程化体系，你会考虑哪些模块？
+
+## 场景应用
+
+> 项目中需要兼容低版本浏览器，你会如何制定技术方案？
+
+
+
+> 如何实现一个“编译时自动替换业务配置”的功能？（如根据环境变量切换 API 地址）
+
+
+
+> 如果发现线上代码的 Source Map 泄漏，如何快速定位并修复？
+
+
+
+> 如何设计一个支持多主题切换的前端项目
+
+
+
+> 如何实现前端资源的离线化(PWA)
+
+
+
+> 如何通过webpack实现国际化（i18）支持
+
+
+
+> 如何设计一个高性能的表格组件
+
+
+
+## **开放性问题**
+
+> 你如何看待前端工程化的未来趋势？
+
+
+
+> 是否关注过 Turbopack、Rust 工具链等新技术？
+
+
+
+> 在过去的项目中，你做过哪些提升工程化效率的改进？具体量化结果是什么？
+
+
+
+> 如何设计一个高可用、高性能的前端架构？
+
+
+
+> 前端工程化中有哪些常见的坑？你是如何解决的？
+
+## **评估候选人能力的核心点**
+
+1. **工具使用熟练度**：是否能灵活配置 Webpack/Vite，解决实际构建问题。
+2. **原理理解深度**：是否了解构建工具、Babel、性能优化等底层逻辑。
+3. **实战经验**：是否有复杂项目的工程化落地经验（如微前端、SSR、自动化流水线）。
+4. **解决问题能力**：面对性能瓶颈、部署异常等场景是否能给出合理方案。
+5. **技术视野**：是否关注工程化前沿技术（如 Bundleless、Rust 工具链）。
