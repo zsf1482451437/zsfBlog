@@ -155,13 +155,121 @@ Cache-Control: no-store
 
 
 
-> 代码分割配置和原理
-
 
 
 > 如果构建速度慢，你会如何分析和优化（考察tree shaking、缓存、并行）
 
 ### 模块化与包管理
+
+#### 代码分割配置和原理
+
+> 代码分割配置和原理
+
+旨在将代码拆分成更小的文件块（chunks），以便实现**按需加载**或**并行加载**，从而提高页面加载性能
+
+**主要分3种方式：**
+
+- 入口起点：手动配置多入口
+- 动态导入：使用import
+- **SplitChunksPlugin**：提取公共依赖和第三方库
+
+**技术原理**
+
+- **编译阶段**：webpack分析模块依赖关系，识别出可分割的代码块（Chunks）
+- **运行时**：通过jsonp或**script标签**动态加载分割后的代码
+- **缓存优化**：利用contenthash实现长期缓存（Long-term Caching）
+
+##### 入口起点分割
+
+**适用场景**：明确需要分离的第三方库或基础包
+
+```js
+// webpack.config.js
+module.exports = {
+  entry: {
+    app: './src/index.js',
+    vendor: ['react', 'react-dom', 'lodash'] // 显式分离第三方库
+  },
+  output: {
+    filename: '[name].[contenthash].js',
+    path: path.resolve(__dirname, 'dist')
+  }
+};
+```
+
+**效果**：
+
+- 生成 `app.xxxx.js` 和 `vendor.xxxx.js` 两个文件
+- 第三方库变更时只需更新 `vendor` 文件的 hash
+
+##### 动态导入
+
+**适用场景**：路由懒加载/组件按需加载
+
+```js
+// React 组件懒加载
+const ProductList = React.lazy(() => import(
+  /* webpackChunkName: "product" */ 
+  './components/ProductList'
+));
+
+// 普通模块动态加载
+document.getElementById('btn').addEventListener('click', () => {
+  import(
+    /* webpackPrefetch: true */
+    /* webpackChunkName: "analytics" */
+    './analytics'
+  ).then(module => {
+    module.trackEvent();
+  });
+});
+```
+
+**效果**：
+
+- 生成 `product.[hash].js` 和 `analytics.[hash].js` 独立 chunk
+- 点击按钮时才会加载 analytics 模块
+- `prefetch` 会在浏览器空闲时预加载
+
+##### SplitChunksPlugin 智能分割
+
+**适用场景**：自动提取公共依赖
+
+```js
+// webpack.config.js
+module.exports = {
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+          name: 'react-vendor',
+          priority: 20
+        },
+        lodash: {
+          test: /[\\/]node_modules[\\/]lodash[\\/]/,
+          name: 'lodash-vendor',
+          priority: 10
+        },
+        commons: {
+          name: 'commons',
+          minChunks: 2,
+          minSize: 0
+        }
+      }
+    }
+  }
+};
+```
+
+**效果**：
+
+- 生成 `react-vendor.[hash].js`（包含 react 相关）
+- 生成 `lodash-vendor.[hash].js`（仅 lodash）
+- 生成 `commons.[hash].js`（被引用2次以上的公共模块）
+
+
 
 > ES Module和Common JS的区别是什么？webpack如何解析他们？
 
@@ -333,8 +441,6 @@ class Compiler {
   }
 }
 ```
-
-
 
 
 
