@@ -12788,6 +12788,347 @@ export default MyComponent;
 
 - 修改组件逻辑前，一定要清楚组件被哪些地方引用到；
 
+## mini-react
+
+### 原生
+
+1. 创建一个节点
+2. 对应vdom
+3. 动态创建一个vdom
+
+> 如何创建一个App节点？
+
+index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="app"></div>
+    <script type="module" src="index.js"></script>
+</body>
+</html>
+```
+
+index.js
+
+```js
+// 创建节点，设置节点属性，添加到根容器
+const dom = document.createElement('div')
+dom.id = 'app'
+const root = document.querySelector('#app')
+root.appendChild(dom)
+
+// 创建子节点，设置节点内容，添加到节点
+const textNode = document.createTextNode('App')
+textNode.nodeValue = 'App'
+dom.appendChild(textNode)
+```
+
+> 使用vdom的形式
+
+index.js
+
+```js
+const textEl = {
+    type: 'TEXT_ELEMENT',
+    props: {
+        nodeValue: 'App',
+        children: []
+    }
+}
+const el = {
+    type: 'div',
+    props: {
+        id: 'app',
+        children: [textEl]
+    }
+}
+
+const dom = document.createElement(el.type)
+dom.id = el.props.id
+const root = document.querySelector('#app')
+root.appendChild(dom)
+
+const textNode = document.createTextNode('')
+textNode.nodeValue = textEl.props.nodeValue
+dom.appendChild(textNode)
+```
+
+改成函数形式创建vdom
+
+```js
+const createTextNode = (text) => {
+    return {
+        type: 'TEXT_ELEMENT',
+        props: {
+            nodeValue: text,
+            children: []
+        }
+    }
+}
+
+const createElement = (type, props, ...children) => {
+    return {
+        type,
+        props: {
+            ...props,
+            children
+        }
+    }
+}
+const textEl = createTextNode('App')
+const App = createElement('div', { id: 'app' }, textEl)
+
+const dom = document.createElement(App.type)
+dom.id = App.props.id
+const root = document.querySelector('#app')
+root.appendChild(dom)
+
+const textNode = document.createTextNode('')
+textNode.nodeValue = textEl.props.nodeValue
+dom.appendChild(textNode)
+```
+
+> 动态创建vdom
+
+观察上述创建vdom步骤，可抽象成3个步骤：
+
+1. 创建节点
+2. 设置props
+3. append进父级容器
+
+```js
+const createTextNode = (text) => {
+    return {
+        type: 'TEXT_ELEMENT',
+        props: {
+            nodeValue: text,
+            children: []
+        }
+    }
+}
+
+const createElement = (type, props, ...children) => {
+    return {
+        type,
+        props: {
+            ...props,
+            children: children.map(child => typeof child === 'string' ? createTextNode(child) : child) // 将字符串转换为文本节点
+        }
+    }
+}
+// 抽象创建vdom
+const render = (element, parentDom) => {
+    // 创建dom
+    const dom = element.type === 'TEXT_ELEMENT' ? document.createTextNode('') : document.createElement(element.type)
+    
+    // 设置props: id class ...
+    Object.keys(element.props).forEach((key) => {
+        if (key === 'children') {
+            element.props.children.forEach((child) => {
+                render(child, dom)
+            })
+        } else {
+            dom[key] = element.props[key]
+        }
+    })
+
+
+
+    // 添加到父节点
+    parentDom.appendChild(dom)
+}
+
+const App = createElement('div', { id: 'app' }, 'app', 'hello')
+const root = document.querySelector('#app')
+render(App, root)
+```
+
+### 模拟react
+
+```js
+// 目标：模拟react的方式
+import ReactDom from 'react-dom/client';
+import App from './App';
+
+ReactDom.createRoot(document.getElementById('root')).render(App);
+```
+
+实现
+
+```js
+const createTextNode = (text) => {
+    return {
+        type: 'TEXT_ELEMENT',
+        props: {
+            nodeValue: text,
+            children: []
+        }
+    }
+}
+
+const createElement = (type, props, ...children) => {
+    return {
+        type,
+        props: {
+            ...props,
+            children: children.map(child => typeof child === 'string' ? createTextNode(child) : child) // 将字符串转换为文本节点
+        }
+    }
+}
+// 抽象创建vdom
+const render = (element, parentDom) => {
+    // 创建dom
+    const dom = element.type === 'TEXT_ELEMENT' ? document.createTextNode('') : document.createElement(element.type)
+    
+    // 设置props: id class ...
+    Object.keys(element.props).forEach((key) => {
+        if (key === 'children') {
+            element.props.children.forEach((child) => {
+                render(child, dom)
+            })
+        } else {
+            dom[key] = element.props[key]
+        }
+    })
+
+    // 添加到父节点
+    parentDom.appendChild(dom)
+}
+const App = createElement('div', { id: 'app' }, 'app', ' hi')
+const root = document.querySelector('#app')
+const ReactDom = {
+    createRoot(container) {
+        return {
+            render(element) {
+                render(element, container)
+            }
+        }
+    }
+}
+
+ReactDom.createRoot(root).render(App)
+```
+
+### 业务框架分离
+
+core/react.js
+
+```js
+const createTextNode = (text) => {
+    return {
+        type: 'TEXT_ELEMENT',
+        props: {
+            nodeValue: text,
+            children: []
+        }
+    }
+}
+
+const createElement = (type, props, ...children) => {
+    return {
+        type,
+        props: {
+            ...props,
+            children: children.map(child => typeof child === 'string' ? createTextNode(child) : child) // 将字符串转换为文本节点
+        }
+    }
+}
+const render = (element, parentDom) => {
+    // 创建dom
+    const dom = element.type === 'TEXT_ELEMENT' ? document.createTextNode('') : document.createElement(element.type)
+    
+    // 设置props: id class ...
+    Object.keys(element.props).forEach((key) => {
+        if (key === 'children') {
+            element.props.children.forEach((child) => {
+                render(child, dom)
+            })
+        } else {
+            dom[key] = element.props[key]
+        }
+    })
+
+    // 添加到父节点
+    parentDom.appendChild(dom)
+}
+
+const React = {
+    createElement,
+    render
+}
+
+export default React;
+
+```
+
+core/reactDom.js
+
+```js
+import React from './react.js';
+
+const ReactDom = {
+    createRoot(container) {
+        return {
+            render(element) {
+                React.render(element, container)
+            }
+        }
+    }
+}
+
+export default ReactDom;
+```
+
+
+
+/raw/App.js
+
+```js
+import React from '../core/react.js';
+
+const App = React.createElement('div', { id: 'app' }, 'app', ' hi')
+
+export default App;
+```
+
+
+
+/raw/index.js
+
+```js 
+import ReactDom from '../core/reactDom.js';
+import App from './App.js';
+ReactDom.createRoot(document.getElementById('root')).render(App)
+```
+
+/raw/index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="index.js"></script>
+</body>
+</html>
+```
+
+
+
+
+
 ## 疑难杂症
 
 ### 某个组件被高阶组件包裹，无法访问静态属性
